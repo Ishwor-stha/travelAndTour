@@ -17,7 +17,7 @@ module.exports.getTours = async (req, res) => {
         // let query={}
         let condition = [];
 
-        // Extracting query parameters
+        // destructring query parameters
         let { destination, category, type, duration } = req.query;
 
         // Handling the sorting logic
@@ -25,13 +25,13 @@ module.exports.getTours = async (req, res) => {
             sort = req.query.price === "asc" ? 1 : -1;
         }
 
-        // Building the $or condition dynamically
+        // Building the condition for $or condition
         if (destination) condition.push({ destination: destination });
         if (category) condition.push({ category: category });
         if (type) condition.push({ type: type });
         if (duration) condition.push({ duration: duration });
 
-        console.log("Condition for OR query:", condition);
+        
 
         // Fetching the data from the database using $or condition for flexible matching
         let tourQuery = Tour.find();
@@ -41,21 +41,23 @@ module.exports.getTours = async (req, res) => {
             tourQuery = tourQuery.where({ $or: condition });
         }
 
-        // If sorting by price is required, apply it
+        // If sorting by price 
         if (req.query.price) {
             tourQuery = tourQuery.sort({ price: sort });
         }
 
-        // Execute the query and get the result
         const tour = await tourQuery;
 
-        if (tour) {
+        if (tour.length>0) {
             res.status(200).json({
                 status: "Success",
                 tourList: tour
             });
         } else {
-            throw new Error("Something went wrong while fetching data");
+            res.status(200).json({
+                status:"Success",
+                tourList:"No tour found"
+            })
         }
     } catch (error) {
         res.status(404).json({
