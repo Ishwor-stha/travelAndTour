@@ -1,4 +1,6 @@
-const Tour = require("../modles/tourModel")
+const Tour = require("../modles/tourModel");
+const errorHandling = require("../utils/errorHandling");
+const errorHandler = require("../utils/errorHandling")
 module.exports.homePage = (req, res) => {
     res.status(200).json({
         status: "Success",
@@ -9,7 +11,7 @@ module.exports.homePage = (req, res) => {
 //@method :GET 
 //@Endpoint: localhost:6000/get-tours
 //@desc:Getting the array of  of tours in object
-module.exports.getTours = async (req, res) => {
+module.exports.getTours = async (req, res, next) => {
     try {
         // variable for sorting
         let sort;
@@ -61,10 +63,14 @@ module.exports.getTours = async (req, res) => {
             });
         }
     } catch (error) {
-        res.status(404).json({
-            status: "Failed",
-            message: error.message
-        });
+        // res.status(404).json({
+        //     status: "Failed",
+        //     message: error.message
+        // });
+        next(new errorHandler(error, 404))
+
+
+
     }
 };
 
@@ -72,7 +78,7 @@ module.exports.getTours = async (req, res) => {
 //@EndPoint:localhost:6000/post-tour
 //@method:POST
 //@desc:Adding the tours
-module.exports.postTour = async (req, res) => {
+module.exports.postTour = async (req, res, next) => {
     try {
         let data = {}
         let keys = ["name", "price", "description", "destination", "image", "category", "type", "duration", "discount"]
@@ -101,10 +107,11 @@ module.exports.postTour = async (req, res) => {
 
         })
     } catch (error) {
-        res.status(500).json({
-            status: "Failed",
-            message: error.message
-        })
+        // res.status(500).json({
+        //     status: "Failed",
+        //     message: error.message
+        // })
+        next(new errorHandler(error, 500))
 
     }
 }

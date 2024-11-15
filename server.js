@@ -1,7 +1,8 @@
 const dotenv = require('dotenv');
 const express=require("express");
 const mongoose=require("mongoose")
-const tourRoute=require("./route/tourRoute")
+const tourRoute=require("./route/tourRoute");
+const errorController = require('./controller/errorController');
 const app=express();
 dotenv.config()
 app.use(express.json())
@@ -27,6 +28,7 @@ app.all("*",(req,res)=>{
     })
 
 })
+app.use(errorController)
 
 const PORT=process.env.PORT
 app.listen(PORT,()=>{
