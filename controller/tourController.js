@@ -75,6 +75,8 @@ module.exports.getTours = async (req, res, next) => {
 };
 
 
+
+
 //@EndPoint:localhost:6000/post-tour
 //@method:POST
 //@desc:Adding the tours
