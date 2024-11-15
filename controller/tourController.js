@@ -87,7 +87,7 @@ module.exports.postTour = async (req, res, next) => {
             // checks whether the req.body has the appropriate key
             if (keys.includes(key)) {
                 // checking if the data is number or string
-                if (typeof req.body.key === "number") {
+                if (typeof req.body[key] === "number") {
                     data[key] = req.body[key]
 
                 }
