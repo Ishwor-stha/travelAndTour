@@ -20,6 +20,13 @@ const adminSchema=mongoose.Schema({
                     },
             message:"A Password and Confirm Password Doesnot match"
         }
+    },
+    email:{
+        type:"String",
+        require:[true,"Email is missing"],
+        match: [/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/, 'Please fill a valid email address'],
+        lowercase:true
+
     }
 })
 const adminModel=mongoose.model("admin",adminSchema)
