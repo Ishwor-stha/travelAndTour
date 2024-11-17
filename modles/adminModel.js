@@ -28,6 +28,7 @@ const adminSchema=mongoose.Schema({
         lowercase:true
 
     }
+    
 })
 const adminModel=mongoose.model("admin",adminSchema)
 
