@@ -1,5 +1,4 @@
 const Tour = require("../modles/tourModel");
-const errorHandling = require("../utils/errorHandling");
 const errorHandler = require("../utils/errorHandling")
 module.exports.homePage = (req, res) => {
     res.status(200).json({
@@ -50,13 +49,13 @@ module.exports.getTours = async (req, res, next) => {
         }
 
         const tour = await tourQuery;
-
+        // if there is is tour 
         if (tour.length > 0) {
             res.status(200).json({
                 status: "Success",
                 tourList: tour
             });
-        } else {
+        } else {//if there is no tour
             res.status(200).json({
                 status: "Success",
                 tourList: "No tour found"
@@ -67,6 +66,7 @@ module.exports.getTours = async (req, res, next) => {
         //     status: "Failed",
         //     message: error.message
         // });
+        // passing erorr to the error handling middleware
         next(new errorHandler(error, 404))
 
 
@@ -77,7 +77,7 @@ module.exports.getTours = async (req, res, next) => {
 
 
 
-//@EndPoint:localhost:6000/post-tour
+//@EndPoint:localhost:6000/tour-admin/post-tour
 //@method:POST
 //@desc:Adding the tours
 module.exports.postTour = async (req, res, next) => {
@@ -101,7 +101,7 @@ module.exports.postTour = async (req, res, next) => {
 
             }
         }
-        // double check if the data.name is string or not
+        // querying to the database
         const newTour = await Tour.create(data);
         res.status(201).json({
             status: "Success",
@@ -113,7 +113,62 @@ module.exports.postTour = async (req, res, next) => {
         //     status: "Failed",
         //     message: error.message
         // })
+        // passing error to the error handling middleware
         next(new errorHandler(error, 500))
+
+    }
+}
+
+// @method PATCH
+// @desc:A controller to update the existing data of data base
+// @endpoint:localhost:6000/tour-admin/update-tour/:id
+module.exports.updateTour = async (req, res, next) => {
+    try {
+        // id from url
+        let id = req.params.id;
+        let keys = ["name", "price", "description", "destination", "image", "category", "type", "duration", "discount"];
+        let updatedData = {};
+        // check whether the req.body has valid key
+        for (let key in req.body) {
+            if (keys.includes(key)) {
+                // adding new object to the empty object variables
+                updatedData[key] = req.body[key]
+            }
+        }
+        // querying to database
+        const updateTour = await Tour.findByIdAndUpdate(id, updatedData);
+        // sending response
+        res.status(200).json({
+            status: "Success",
+            updateTour
+
+        })
+    } catch (error) {
+        // passing error to the error handling middleware
+        next(new errorHandler(error, 400));
+
+    }
+}
+
+// @method DELETE
+// @desc:controller to delete tour
+// @endpoint:localhost:6000/tour-admin/delete-tour
+module.exports.deleteTour = async (req, res, next) => {
+    try {
+        // id from url
+        const id = req.params.id;
+        // querying the database
+        const del = await Tour.findByIdAndDelete(id)
+        // sending response
+        res.status(200).json({
+            status: "Success",
+            message: `${del.name} deleted`
+
+        })
+    } catch (error) {
+        // passing error to the error handling middleware
+        next(new errorHandler(error, 401))
+
 
     }
 }
