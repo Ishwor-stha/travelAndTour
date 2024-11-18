@@ -69,3 +69,7 @@ module.exports.createAdmin = async (req, res, next) => {
 //     }
 // }
 
+// const login=(req,res,next)=>{
+    
+
+// }
