@@ -2,6 +2,7 @@ const dotenv = require('dotenv');
 const express = require("express");
 const mongoose = require("mongoose");
 const tourRoute = require("./route/tourRoute");
+const adminRoute=require("./route/adminRoute")
 const errorController = require('./controller/errorController');
 const errorHandling = require('./utils/errorHandling');
 
@@ -30,6 +31,7 @@ databaseConnect();
 
 // Mount the tour route
 app.use("/", tourRoute);
+app.use("/admin/",adminRoute);
 
 // Handle any unhandled routes with a 404 error
 app.all("*", (req, res) => {

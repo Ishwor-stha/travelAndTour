@@ -140,7 +140,8 @@ module.exports.updateTour = async (req, res, next) => {
         // sending response
         res.status(200).json({
             status: "Success",
-            updateTour
+            name:updateTour.name,
+            updatedData
 
         })
     } catch (error) {
