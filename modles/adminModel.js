@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const validator = require("validator"); // We'll use this to validate the email format
+const bcrypt=require("bcryptjs");
+const errorHandling = require("../utils/errorHandling");
 
 const adminSchema = mongoose.Schema({
     name: {
@@ -48,10 +50,19 @@ const adminSchema = mongoose.Schema({
     }
 });
 
-// Pre-save hook to remove confirmPassword from the document before saving
-adminSchema.pre("save", function (next) {
-    this.confirmPassword = undefined; // Remove confirmPassword from the saved document
-    next();
+// Pre-save hook to remove confirmPassword and hashing the password in the document before saving
+adminSchema.pre("save", async function (next) {
+    if (!this.isModified("password")) return next(); // If password isn't modified, skip hashing
+
+    // Hash the password
+    try {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
+        this.confirmPassword = undefined; // Remove confirmPassword from the saved document
+        next();
+    } catch (error) {
+        next(new errorHandling(error,error.statusCode)); // Pass error to the next middleware if hashing fails
+    }
 });
 
 const adminModel = mongoose.model("admin", adminSchema);
