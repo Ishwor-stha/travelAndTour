@@ -57,15 +57,14 @@ module.exports.createAdmin = async (req, res, next) => {
 };
 
 // unnecessary controller delete this after testing
-/*module.exports.deleteAll =async  (req, res) => {
-    try {
-        const deletes =await  admin.deleteMany({})
-        res.json({
-            stauts: "deleted"
-        })
+// module.exports.deleteAll =async  (req, res) => {
+//     try {
+//         const deletes =await  admin.deleteMany({})
+//         res.json({
+//             stauts: "deleted"
+//         })
 
-    } catch (error) {
-        next(new errorHandling(error,400))
-    }
-}
-*/
+//     } catch (error) {
+//         next(new errorHandling(error,400))
+//     }
+// }
