@@ -7,7 +7,6 @@ const adminSchema = mongoose.Schema({
     name: {
         type: String,
         required: [true, "Name is Missing"],
-        unique: [true, "Name already exists! Please try another name"]
     },
     password: {
         type: String,
@@ -16,13 +15,13 @@ const adminSchema = mongoose.Schema({
     },
     confirmPassword: {
         type: String,
-        required: [true, "Confirm Password is Missing"],
-        validate: {
-            validator: function (value) {
-                return value === this.password; // Confirm password must match password
-            },
-            message: "Password and Confirm Password do not match"
-        }
+        required: [true, "Confirm Password is Missing"]
+        // validate: {
+        //     validator: function (value) {
+        //         return value === this.password; // Confirm password must match password
+        //     },
+        //     message: "Password and Confirm Password do not match"
+        // }
     },
     email: {
         type: String,

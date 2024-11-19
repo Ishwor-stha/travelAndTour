@@ -1,4 +1,5 @@
 const dotenv = require('dotenv');
+const cookieParser=require("cookie-parser")
 const express = require("express");
 const mongoose = require("mongoose");
 const tourRoute = require("./route/tourRoute");
@@ -13,6 +14,7 @@ dotenv.config();
 
 // Middleware to parse incoming JSON requests
 app.use(express.json());
+app.use(cookieParser())
 
 // Function to connect to the database
 async function databaseConnect() {
