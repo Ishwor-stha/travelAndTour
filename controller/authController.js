@@ -1,5 +1,4 @@
 const errorHandling = require("../utils/errorHandling")
-
 const admin = require("../modles/adminModel")
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
@@ -232,7 +231,7 @@ module.exports.removeAdmin = async(req, res, next) => {
         let adminId = req.params.id//from url
         const del = await admin.findByIdAndDelete(adminId)
         if (!del) {
-            throw new errorHandling("Something went wrong while deleting admin", 404)
+            throw new errorHandling("Something went wrong while deleting admin", 400)
         }
         res.status(200).json({
             status: "Success",
