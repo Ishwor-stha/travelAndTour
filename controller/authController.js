@@ -4,6 +4,30 @@ const admin = require("../modles/adminModel")
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 
+
+// @method GET
+// @desc:controller to get all admin
+// @endpoint: localhost:6000/admin/get-admins
+
+module.exports.getAllAdmin=async (req,res,next)=>{
+    try {
+        const allAdmin=await admin.find({},"-_id -password")//exclude _id and password
+        if(!allAdmin){
+            res.status(200).json({
+                status:"sucess",
+                message:"No data found"
+            })
+        }
+        res.status(200).json({
+            status:"success",
+            allAdmin
+        })
+    } catch (error) {
+        return next(new errorHandling(error.message,error.statusCode||400 ))
+        
+    }
+}
+
 // @method POST
 // @desc:controller to create new admin
 // @endpoint: localhost:6000/admin/create-admin

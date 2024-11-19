@@ -2,6 +2,7 @@ const express=require("express")
 const  admin  = require("../controller/authController")
 
 const Router=express.Router()
+Router.route("/get-admins").get(admin.checkJwt, admin.getAllAdmin)
 
 Router.route("/create-admin/").post(admin.checkJwt,admin.createAdmin)
 // Router.route("/delete").delete(admin.deleteAll)
