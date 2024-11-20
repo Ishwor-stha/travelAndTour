@@ -2,28 +2,34 @@ const errorHandling = require("../utils/errorHandling")
 const admin = require("../modles/adminModel")
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
+const validator = require("validator"); // We'll use this to validate the email format
+// const mailgun = require('mailgun.js');
+// const { sendMail } = require("../utils/sendMail");
+const crypto = require('crypto')
+const nodemailer = require("nodemailer");
+const { error } = require("console");
 
 
 // @method GET
 // @desc:controller to get all admin
 // @endpoint: localhost:6000/admin/get-admins
 
-module.exports.getAllAdmin=async (req,res,next)=>{
+module.exports.getAllAdmin = async (req, res, next) => {
     try {
-        const allAdmin=await admin.find({},"-_id -password")//exclude _id and password
-        if(!allAdmin){
+        const allAdmin = await admin.find({}, "-_id -password")//exclude _id and password
+        if (!allAdmin) {
             res.status(200).json({
-                status:"sucess",
-                message:"No data found"
+                status: "sucess",
+                message: "No data found"
             })
         }
         res.status(200).json({
-            status:"success",
+            status: "success",
             allAdmin
         })
     } catch (error) {
-        return next(new errorHandling(error.message,error.statusCode||400 ))
-        
+        return next(new errorHandling(error.message, error.statusCode || 400))
+
     }
 }
 
@@ -223,7 +229,7 @@ module.exports.updateAdmin = async (req, res, next) => {
 // @method delete
 // @desc:controller to delete new admin
 // @endpoint: localhost:6000/admin/delete-admin
-module.exports.removeAdmin = async(req, res, next) => {
+module.exports.removeAdmin = async (req, res, next) => {
     try {
         if (!req.params.id) {
             return next(new errorHandling("Something went wrong", 400))
@@ -243,7 +249,109 @@ module.exports.removeAdmin = async(req, res, next) => {
     }
 
 }
+// @endpoint:localhost:6000/admin/forget-password
+// @desc:forget password also send gmail
+// @method:POST
 
-// login details
-// email:suzankhadka710@gmail.com
-// password:HELLOWORLD
+module.exports.forgotPassword = async (req, res, next) => {
+    try {
+        let { email } = req.body
+        const isEmail = validator.isEmail(email)
+        const allowedDomains = ["gmail.com", "yahoo.com", "outlook.com"];
+        const emailDomain = email.split('@')[1]; // Get the part after '@'
+        const valid = allowedDomains.includes(emailDomain);
+
+        if (!isEmail || !valid) {
+            return next(new errorHandling("Please enter valid email address", 400))
+        }
+
+        const findMail = await admin.findOne({ email }, " -password -name")//exclude _id ,password and name
+        if (!findMail) {
+            return next(new errorHandling("Email not found", 404))
+        }
+
+        // message part
+        const resetToken = await crypto.randomBytes(16).toString('hex')
+
+        await admin.findByIdAndUpdate(findMail._id, { "code": resetToken })
+        // Create the reset link
+        const resetLink = `${process.env.URL}/reset-password/${resetToken}`  // Use full URL (including 'http://')
+        // Construct the email message
+        const message = `
+        <p>Hello,</p>
+        <p>We received a request to reset your password. Please click the link below to reset your password:</p>
+        <p><a href="${resetLink}" target="_blank">Reset Password</a></p> <!-- Added target="_blank" to open in a new tab -->
+        <p>If you did not request this, please ignore this email.</p>
+        `
+
+
+        let transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.gmailUser,
+                pass: process.env.gmailPassword
+            }
+        });
+
+        let mailOptions = await {
+            from: 'suzankhadka710@gmail.com',
+            to: findMail.email,
+            subject: 'Reset link',
+            html: message
+        };
+
+        transporter.sendMail(mailOptions, await function (error, info) {
+            if (error) {
+                return next(new errorHandling(error.message, error.statusCode || 500))
+            } else {
+                console.log('Email sent: ' + info.response)
+                res.status(200).json({
+                    message: "Password Reset Email  Send"
+                })
+            }
+        });
+
+    } catch (error) {
+        return next(new errorHandling(error.message, error.statusCode || 400))
+    }
+}
+// @desc: reset link with code
+// @method: PATCH
+// @endpoint:localhost:6000/reset-password/:code
+
+module.exports.resetPassword = async (req, res, next) => {
+    try {
+        if (!req.body.password || !req.body.confirmPassword) {
+            return next(new errorHandling("Please fill out the form", 400))
+        }
+        let { password, confirmPassword } = req.body
+        if (password !== confirmPassword) {
+            return next(new errorHandling("Password or confirm password do not match", 400))
+
+        } else {
+            const salt = await bcrypt.genSalt(10);
+            req.body.password = await bcrypt.hash(req.body.password, salt);
+            req.body.confirmPassword = undefined
+        }
+        if (!req.params.code) {
+            return next(new errorHandling("Unauthorized", 400))
+        }
+
+        let code = req.params.code
+        let adminCode = await admin.findOne({ code })
+        if (!adminCode) {
+            return next(new errorHandling("Code expired", 404))
+        }
+
+        await admin.findByIdAndUpdate(adminCode._id, {"password":req.body.password})
+
+        res.status(200).json({
+            status: "sucess",
+            message: "Changed sucessfully"
+        })
+
+
+    } catch (error) {
+        return next(new errorHandling("Something went wrong", error.statusCode || 500))
+    }
+}

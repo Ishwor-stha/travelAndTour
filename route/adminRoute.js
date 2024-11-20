@@ -10,6 +10,10 @@ Router.route("/login-admin/").post(admin.login)
 Router.route("/logout-admin/").post(admin.checkJwt,admin.logout)
 Router.route("/update-admin/").patch(admin.checkJwt, admin.updateAdmin)
 Router.route("/remove-admin/:id").delete(admin.checkJwt, admin.removeAdmin)
+Router.route("/forget-password").post( admin.forgotPassword)
+Router.route("/reset-password/:code").patch(admin.resetPassword)
+
+
 
 
 

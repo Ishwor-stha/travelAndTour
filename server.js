@@ -6,14 +6,35 @@ const tourRoute = require("./route/tourRoute");
 const adminRoute=require("./route/adminRoute")
 const errorController = require('./controller/errorController');
 const errorHandling = require('./utils/errorHandling');
-
 const app = express();
+// security packages
+const rateLimit = require('express-rate-limit');
+const helmet=require('helmet')
+const cors=require('cors')
 
+const corsOptions ={
+    origin:'localhost:6000'
+}
 // Load environment variables from .env file
 dotenv.config();
 
+// Define rate limit configuration
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes in milliseconds
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again after 15 minutes.',
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  });
+  
+
 // Middleware to parse incoming JSON requests
 app.use(express.json());
+//security 
+app.use(limiter)
+app.use(helmet())
+app.use(cors(corsOptions))
+//////////////////////////
 app.use(cookieParser())
 
 // Function to connect to the database
