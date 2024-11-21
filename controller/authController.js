@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken")
 const validator = require("validator"); // We'll use this to validate the email format
 const crypto = require('crypto')
 const nodemailer = require("nodemailer");
-const { error } = require("console");
+
 
 
 // @method GET
