@@ -15,7 +15,7 @@ const adminSchema = mongoose.Schema({
     },
     confirmPassword: {
         type: String,
-        required: [true, "Confirm Password is Missing"]
+        // required: [true, "Confirm Password is Missing"]
         // validate: {
         //     validator: function (value) {
         //         return value === this.password; // Confirm password must match password
@@ -44,8 +44,8 @@ const adminSchema = mongoose.Schema({
     code: {
         resetToken: String
     },
-    passwordExpiry: {
-        type: Date
+    resetExpiry: {
+        type: Number
     }
 });
 

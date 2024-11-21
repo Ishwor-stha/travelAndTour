@@ -37,12 +37,17 @@ module.exports.getAllAdmin = async (req, res, next) => {
 
 module.exports.createAdmin = async (req, res, next) => {
     try {
+        if (!req.body.password || !req.body.confirmPassword) {
+            return next(new errorHandling("Confirm password or password is missing", 400));
+        }
         // destructuring the fields from req.body
         const { name, password, confirmPassword, email } = req.body;
 
+
+
         // Check if password and confirmPassword match
         if (password !== confirmPassword) {
-            next(new errorHandling("Password or confirm password do not match", 400))
+            return next(new errorHandling("Password or confirm password do not match", 400))
 
         }
 
@@ -64,9 +69,8 @@ module.exports.createAdmin = async (req, res, next) => {
     } catch (error) {
         // Catch validation errors or other errors
         if (error.name === "ValidationError") {
-            console.log("\n")
+            // console.log("\n")
 
-            console.log("validation Error")
             return next(new errorHandling(error, 400))
         }
         // catch duplicate key error
@@ -110,6 +114,17 @@ module.exports.createAdmin = async (req, res, next) => {
 module.exports.login = async (req, res, next) => {
     try {
         let { email, password } = req.body
+        if (!email || !password) {
+            return next(new errorHandling("Email or password is missing", 404))
+        }
+        const isEmail = validator.isEmail(email)
+        const allowedDomains = ["gmail.com", "yahoo.com", "outlook.com"];
+        const emailDomain = email.split('@')[1]; // Get the part after '@'
+        const valid = allowedDomains.includes(emailDomain);
+        if (!isEmail || !valid) {
+            return next(new errorHandling("Please enter valid email address", 400))
+        }
+
 
         const user = await admin.findOne({ email })
         if (!user) {
@@ -192,7 +207,24 @@ module.exports.updateAdmin = async (req, res, next) => {
         const userId = req.user.userId//from checkJwt controller
         let details = ["name", "email", "password", "confirmPassword"]
         let updatedData = {}
+
+        if (req.body.email) {
+            const email = req.body.email
+            const isEmail = validator.isEmail(email)
+            const allowedDomains = ["gmail.com", "yahoo.com", "outlook.com"];
+            const emailDomain = email.split('@')[1]; // Get the part after '@'
+            const valid = allowedDomains.includes(emailDomain);
+            if (!isEmail || !valid) {
+                return next(new errorHandling("Please enter valid email address", 400))
+            }
+
+        }
+
         if (req.body.password) {
+            if (!req.body.password || !req.body.confirmPassword) {
+                return next(new errorHandling("Confirm password of password is missing", 400));
+            }
+
             if (req.body.password !== req.body.confirmPassword) {
 
                 return next(new errorHandling("Confirm Password or Password doesnot match", 400))
@@ -268,12 +300,17 @@ module.exports.forgotPassword = async (req, res, next) => {
             return next(new errorHandling("Email not found", 404))
         }
 
-        // message part
+        //                               message part
+        //generate  token
         const resetToken = await crypto.randomBytes(16).toString('hex')
 
-        await admin.findByIdAndUpdate(findMail._id, { "code": resetToken })
+        // Set expiration time (e.g., 1 hour from now)
+        const expirationTime = Date.now() + 3600000; // 1 hour in milliseconds
+
+        await admin.findByIdAndUpdate(findMail._id, { "code": resetToken, "resetExpiry": expirationTime })
         // Create the reset link
-        const resetLink = `${process.env.URL}/reset-password/${resetToken}`  // Use full URL (including 'http://')
+        const resetLink = `${process.env.URL}/admin/reset-password/${resetToken}`  // Use full URL (including 'http://')
+        console.log(resetLink)
         // Construct the email message
         const message = `
         <p>Hello,</p>
@@ -304,6 +341,7 @@ module.exports.forgotPassword = async (req, res, next) => {
             } else {
                 console.log('Email sent: ' + info.response)
                 res.status(200).json({
+                    status: "Success",
                     message: "Password Reset Email  Send"
                 })
             }
@@ -316,40 +354,83 @@ module.exports.forgotPassword = async (req, res, next) => {
 // @desc: reset link with code
 // @method: PATCH
 // @endpoint:localhost:6000/reset-password/:code
-
 module.exports.resetPassword = async (req, res, next) => {
     try {
+        // Check if password and confirmPassword are provided
         if (!req.body.password || !req.body.confirmPassword) {
-            return next(new errorHandling("Please fill out the form", 400))
+            return next(new errorHandling("Confirm password of password is missing", 400));
         }
-        let { password, confirmPassword } = req.body
-        if (password !== confirmPassword) {
-            return next(new errorHandling("Password or confirm password do not match", 400))
 
+        let { password, confirmPassword } = req.body;
+
+        // Check if the password and confirmPassword match
+        if (password !== confirmPassword) {
+            return next(new errorHandling("Password and confirm password do not match", 400));
         } else {
+            // Hash the password
             const salt = await bcrypt.genSalt(10);
             req.body.password = await bcrypt.hash(req.body.password, salt);
-            req.body.confirmPassword = undefined
+            // Remove confirmPassword from the request body
+            req.body.confirmPassword = undefined;
         }
+
+        // Check if reset code is provided
         if (!req.params.code) {
-            return next(new errorHandling("Unauthorized", 400))
+            return next(new errorHandling("Unauthorized: Reset code missing", 400));
         }
 
-        let code = req.params.code
-        let adminCode = await admin.findOne({ code })
+        let code = req.params.code;
+
+        // Find the admin using the reset code
+        let adminCode = await admin.findOne({ code });
+
         if (!adminCode) {
-            return next(new errorHandling("Code expired", 404))
+            return next(new errorHandling("Code expired or invalid", 404));
         }
 
-        await admin.findByIdAndUpdate(adminCode._id, {"password":req.body.password})
+        // Check if the reset code has expired
+        const currentDate = Date.now();
+        if (currentDate > adminCode.resetExpiry) {
+            // Clear expired reset code fields
+            adminCode.resetExpiry = undefined;
+            adminCode.code = undefined;
 
+            await adminCode.save();
+
+            // Return error response for expired code
+            return next(new errorHandling("Code has expired. Please request a new one.", 404));
+        }
+
+        // Update the admin's password and clear reset fields
+        const changeAdmin = await admin.findByIdAndUpdate(
+            adminCode._id,
+            {
+                "password": req.body.password,
+
+            },
+            {
+                new: true // Return the updated document
+            }
+        );
+
+        changeAdmin.resetExpiry = undefined;
+        changeAdmin.code = undefined;
+
+        await changeAdmin.save();
+
+
+        if (!changeAdmin) {
+            return next(new errorHandling("Error updating password", 500));
+        }
+
+        // Return success response
         res.status(200).json({
-            status: "sucess",
-            message: "Changed sucessfully"
-        })
-
+            status: "success",
+            message: "Password changed successfully."
+        });
 
     } catch (error) {
-        return next(new errorHandling("Something went wrong", error.statusCode || 500))
+        console.error("Error in resetPassword:", error);
+        return next(new errorHandling("Something went wrong", error.statusCode || 500));
     }
-}
+};
