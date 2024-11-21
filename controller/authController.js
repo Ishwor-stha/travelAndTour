@@ -43,7 +43,10 @@ module.exports.createAdmin = async (req, res, next) => {
         // destructuring the fields from req.body
         const { name, password, confirmPassword, email } = req.body;
 
-
+        if (!name || !email) {
+            return next(new errorHandling("Name and Email are required", 400));
+        }
+        
 
         // Check if password and confirmPassword match
         if (password !== confirmPassword) {
