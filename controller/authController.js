@@ -291,7 +291,7 @@ module.exports.forgotPassword = async (req, res, next) => {
         let { email } = req.body
         const isEmail = validator.isEmail(email)
         const allowedDomains = ["gmail.com", "yahoo.com", "outlook.com"];
-        const emailDomain = email.split('@')[1]; // Get the part after '@'
+        const emailDomain = email.split('@')[1]; // Get the part after '@' ie ["hello@","gmail.com"]
         const valid = allowedDomains.includes(emailDomain);
 
         if (!isEmail || !valid) {
