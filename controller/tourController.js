@@ -101,6 +101,10 @@ module.exports.postTour = async (req, res, next) => {
 
             }
         }
+        if (req.file) {
+            data.image = req.file.path;  // Multer provides the file path (e.g., "uploads/1622492839145.jpg")
+          }
+      
         // querying to the database
         const newTour = await Tour.create(data);
         res.status(201).json({
@@ -135,6 +139,9 @@ module.exports.updateTour = async (req, res, next) => {
                 updatedData[key] = req.body[key]
             }
         }
+        if (req.file) {
+            updatedData.image = req.file.path; // Update image if new file is uploaded
+          }
         // querying to database
         const updateTour = await Tour.findByIdAndUpdate(id, updatedData);
         // sending response

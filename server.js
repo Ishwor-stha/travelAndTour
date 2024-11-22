@@ -1,19 +1,21 @@
 const dotenv = require('dotenv');
-const cookieParser=require("cookie-parser")
+const cookieParser = require("cookie-parser")
 const express = require("express");
 const mongoose = require("mongoose");
+// const multer = require('multer');
+
 const tourRoute = require("./route/tourRoute");
-const adminRoute=require("./route/adminRoute")
+const adminRoute = require("./route/adminRoute")
 const errorController = require('./controller/errorController');
 const errorHandling = require('./utils/errorHandling');
 const app = express();
 // security packages
 const rateLimit = require('express-rate-limit');
-const helmet=require('helmet')
-const cors=require('cors')
+const helmet = require('helmet')
+const cors = require('cors')
 
-const corsOptions ={
-    origin:'localhost:6000'
+const corsOptions = {
+    origin: process.env.URL
 }
 // Load environment variables from .env file
 dotenv.config();
@@ -25,8 +27,7 @@ const limiter = rateLimit({
     message: 'Too many requests from this IP, please try again after 15 minutes.',
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  });
-  
+});
 
 // Middleware to parse incoming JSON requests
 app.use(express.json());
@@ -45,16 +46,43 @@ async function databaseConnect() {
     } catch (error) {
         console.error(`Error connecting to the database: ${error.message}`);
         // Handle error 
-        throw new errorHandling(error, 500);  
+        throw new errorHandling(error, 500);
     }
 }
 
 // Call the database connection function
 databaseConnect();
+/****************************************************************************************************************** */
+// const storage = multer.diskStorage({
+//     destination: (req, file, cb) => {
+//         cb(null, 'uploads/');
+//     },
+//     filename: (req, file, cb) => {
+//         cb(null, Date.now() + '-' + file.originalname);
+//     }
+// });
+
+// const upload = multer({
+//     storage: storage,
+//     fileFilter: (req, file, cb) => {
+//         const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+//         if (!allowedMimeTypes.includes(file.mimetype)) {
+//             return cb(new Error('Invalid file type, only JPEG, PNG, and JPG are allowed'), false);
+//         }
+//         cb(null, true);
+//     },
+//     limits: {
+//         fileSize: 1 * 1024 * 1024 // Limit file size to 1MB
+//     }
+// });
+
+// Export upload as part of an object
+// module.exports.upload = upload;
+/****************************************************************************************************************** */
 
 // Mount the tour route
 app.use("/", tourRoute);
-app.use("/admin/",adminRoute);
+app.use("/admin/", adminRoute);
 
 // Handle any unhandled routes with a 404 error
 app.all("*", (req, res) => {
