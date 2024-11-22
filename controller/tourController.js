@@ -67,7 +67,7 @@ module.exports.getTours = async (req, res, next) => {
         //     message: error.message
         // });
         // passing erorr to the error handling middleware
-        next(new errorHandler(error, 404))
+        next(new errorHandler(error,message,error.statusCode || 404))
 
 
 
@@ -107,9 +107,10 @@ module.exports.postTour = async (req, res, next) => {
       
         // querying to the database
         const newTour = await Tour.create(data);
+        // Manually delete the fields you don't want
         res.status(201).json({
             status: "Success",
-            NewTourDetails: newTour
+            message:`${newTour.name} created sucessfully`
 
         })
     } catch (error) {
@@ -118,7 +119,10 @@ module.exports.postTour = async (req, res, next) => {
         //     message: error.message
         // })
         // passing error to the error handling middleware
-        next(new errorHandler(error, 500))
+        if(error.code==11000 || error.code=="E11000"){
+            return next(new errorHandler("Tour name already exists",400))
+        }
+        next(new errorHandler(error.message,error.statusCode|| 500))
 
     }
 }

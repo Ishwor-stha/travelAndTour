@@ -2,7 +2,8 @@ const mongoose=require("mongoose")
 const tourSchema=new mongoose.Schema({
     name:{
         type:"String",
-        required:[true,"Name of prodct  is missing"]
+        required:[true,"Name of prodct  is missing"],
+        unique:[true,"Tour name already exists"]
     },
     price:{
         type:Number,
@@ -18,7 +19,7 @@ const tourSchema=new mongoose.Schema({
     },
     image:{
         type:"String",
-        // required:[true,"Tour must have image of Tour"]
+        required:[true," Photo of Tour is missing"]
     },
     category:{
         type:String,
