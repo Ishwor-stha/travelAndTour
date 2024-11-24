@@ -29,11 +29,30 @@ const limiter = rateLimit({
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 
+// filtering out duplicate query
+function preventHPP(req, res, next) {
+    const queryParams = req.query;
+    const seenParams = new Set();
+
+    // Filter out duplicate query parameters
+    Object.keys(queryParams).forEach(key => {
+        if (seenParams.has(key)) {
+            delete queryParams[key]; // Remove duplicates
+        } else {
+            seenParams.add(key);
+        }
+    });
+
+    // Pass the cleaned query parameters forward
+    req.query = queryParams;
+    next();
+}
 // Middleware to parse incoming JSON requests
 app.use(express.json());
 //security 
 app.use(limiter)
 app.use(helmet())
+app.use(preventHPP)
 app.use(cors(corsOptions))
 //////////////////////////
 app.use(cookieParser())
