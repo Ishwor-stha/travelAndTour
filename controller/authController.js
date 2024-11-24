@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken")
 const validator = require("validator"); // We'll use this to validate the email format
 const crypto = require('crypto')
 const nodemailer = require("nodemailer");
+const { validateEmail } = require("../utils/emailValidation");
 
 
 
@@ -16,7 +17,7 @@ module.exports.getAllAdmin = async (req, res, next) => {
     try {
         const allAdmin = await admin.find({}, "-_id -password")//exclude _id and password
         if (!allAdmin) {
-            res.status(200).json({
+            res.status(404).json({
                 status: "sucess",
                 message: "No data found"
             })
@@ -26,7 +27,7 @@ module.exports.getAllAdmin = async (req, res, next) => {
             allAdmin
         })
     } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 400))
+        return next(new errorHandling(error.message, error.statusCode || 500))
 
     }
 }
@@ -74,13 +75,13 @@ module.exports.createAdmin = async (req, res, next) => {
         if (error.name === "ValidationError") {
             // console.log("\n")
 
-            return next(new errorHandling(error, 400))
+            return next(new errorHandling(error, 422))
         }
         // catch duplicate key error
         if (error.code === 11000) {
 
             // Unique constraint violation (e.g., duplicate name or email)
-            return next(new errorHandling("Please try a different name or email", 400))
+            return next(new errorHandling("Please try a different name or email", 409))
 
         }
 
@@ -118,30 +119,27 @@ module.exports.login = async (req, res, next) => {
     try {
         let { email, password } = req.body
         if (!email || !password) {
-            return next(new errorHandling("Email or password is missing", 404))
+            return next(new errorHandling("Email or password is missing", 400))
         }
-        const isEmail = validator.isEmail(email)
-        const allowedDomains = ["gmail.com", "yahoo.com", "outlook.com"];
-        const emailDomain = email.split('@')[1]; // Get the part after '@'
-        const valid = allowedDomains.includes(emailDomain);
-        if (!isEmail || !valid) {
+        
+        if (!validateEmail(email)) {
             return next(new errorHandling("Please enter valid email address", 400))
         }
 
 
         const user = await admin.findOne({ email })
         if (!user) {
-            return next(new errorHandling("Cannot find the user", 400))
+            return next(new errorHandling("Cannot find the user", 404))
         }
         const isMatch = await bcrypt.compare(password, user.password)
         if (!isMatch) {
-            return next(new errorHandling("Incorrect Password", 400))
+            return next(new errorHandling("Incorrect Password", 401))
         }
         const payload = {
             userId: user._id,
             email: user.email
         }
-        const token = jwt.sign(payload, process.env.SECRETKEY, { expiresIn: '1h' })
+        const token = jwt.sign(payload, process.env.SECRETKEY, { expiresIn: process.env.jwtExpires })
         res.cookie("auth_token", token, {
             httpOnly: true,
             sameSite: "Strict",
@@ -153,7 +151,7 @@ module.exports.login = async (req, res, next) => {
         })
     } catch (error) {
 
-        return next(new errorHandling(error.message, error.statusCode))
+        return next(new errorHandling(error.message, error.statusCode ||500))
 
     }
 
@@ -179,7 +177,7 @@ module.exports.checkJwt = (req, res, next) => {
             next()
         })
     } catch (error) {
-        return next(new errorHandling(error.message, 400))
+        return next(new errorHandling(error.message, 500))
     }
 }
 
@@ -198,7 +196,7 @@ module.exports.logout = (req, res, next) => {
             message: "Logged out sucessfully"
         })
     } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode))
+        return next(new errorHandling(error.message, error.statusCode ||500))
     }
 }
 
@@ -212,12 +210,8 @@ module.exports.updateAdmin = async (req, res, next) => {
         let updatedData = {}
 
         if (req.body.email) {
-            const email = req.body.email
-            const isEmail = validator.isEmail(email)
-            const allowedDomains = ["gmail.com", "yahoo.com", "outlook.com"];
-            const emailDomain = email.split('@')[1]; // Get the part after '@'
-            const valid = allowedDomains.includes(emailDomain);
-            if (!isEmail || !valid) {
+            
+            if (!validateEmail(req.body.email)) {
                 return next(new errorHandling("Please enter valid email address", 400))
             }
 
@@ -250,12 +244,15 @@ module.exports.updateAdmin = async (req, res, next) => {
         }
 
         const updateUser = await admin.findByIdAndUpdate(userId, updatedData);
+        if(!updateUser){
+            return next(new errorHandling("User not found",404))
+        }
         res.status(200).json({
             status: "Success",
             message: "Details changed sucessfully"
         })
     } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 400))
+        return next(new errorHandling(error.message, error.statusCode || 500))
     }
 
 }
@@ -270,14 +267,14 @@ module.exports.removeAdmin = async (req, res, next) => {
         let adminId = req.params.id//from url
         const del = await admin.findByIdAndDelete(adminId)
         if (!del) {
-            throw new errorHandling("Something went wrong while deleting admin", 400)
+            throw new errorHandling("Admin not found", 404)
         }
         res.status(200).json({
             status: "Success",
             message: "Admin Deleted"
         })
     } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 400))
+        return next(new errorHandling(error.message, error.statusCode || 500))
 
     }
 
@@ -289,12 +286,8 @@ module.exports.removeAdmin = async (req, res, next) => {
 module.exports.forgotPassword = async (req, res, next) => {
     try {
         let { email } = req.body
-        const isEmail = validator.isEmail(email)
-        const allowedDomains = ["gmail.com", "yahoo.com", "outlook.com"];
-        const emailDomain = email.split('@')[1]; // Get the part after '@' ie ["hello@","gmail.com"]
-        const valid = allowedDomains.includes(emailDomain);
-
-        if (!isEmail || !valid) {
+        
+        if (!validateEmail(email)) {
             return next(new errorHandling("Please enter valid email address", 400))
         }
 
@@ -308,7 +301,7 @@ module.exports.forgotPassword = async (req, res, next) => {
         const resetToken = await crypto.randomBytes(16).toString('hex')
 
         // Set expiration time (e.g., 1 hour from now)
-        const expirationTime = Date.now() + 3600000; // 1 hour in milliseconds
+        const expirationTime = Date.now() + 900000; // 15 minutes in milliseconds
 
         await admin.findByIdAndUpdate(findMail._id, { "code": resetToken, "resetExpiry": expirationTime })
         // Create the reset link
@@ -345,7 +338,7 @@ module.exports.forgotPassword = async (req, res, next) => {
                 console.log('Email sent: ' + info.response)
                 res.status(200).json({
                     status: "Success",
-                    message: "Password Reset Email  Send"
+                    message: "Password Reset Email Send"
                 })
             }
         });
