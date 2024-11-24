@@ -48,7 +48,7 @@ function preventHPP(req, res, next) {
     next();
 }
 // Middleware to parse incoming JSON requests
-app.use(express.json());
+app.use(express.json({limit: '10kb'}))//limiting the json body size to 10 kb
 //security 
 app.use(limiter)
 app.use(helmet())
