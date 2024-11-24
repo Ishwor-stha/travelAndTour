@@ -16,6 +16,7 @@ const { validateEmail } = require("../utils/emailValidation");
 module.exports.getAllAdmin = async (req, res, next) => {
     try {
         const allAdmin = await admin.find({}, "-_id -password")//exclude _id and password
+        // if there is no admin
         if (!allAdmin) {
             res.status(404).json({
                 status: "sucess",
@@ -38,16 +39,17 @@ module.exports.getAllAdmin = async (req, res, next) => {
 
 module.exports.createAdmin = async (req, res, next) => {
     try {
+        // if there is no password and confirm password
         if (!req.body.password || !req.body.confirmPassword) {
             return next(new errorHandling("Confirm password or password is missing", 400));
         }
         // destructuring the fields from req.body
         const { name, password, confirmPassword, email } = req.body;
-
+        // no name and email
         if (!name || !email) {
             return next(new errorHandling("Name and Email are required", 400));
         }
-        
+
 
         // Check if password and confirmPassword match
         if (password !== confirmPassword) {
@@ -117,29 +119,39 @@ module.exports.createAdmin = async (req, res, next) => {
 
 module.exports.login = async (req, res, next) => {
     try {
+        // destrcturing
         let { email, password } = req.body
+        // if no email and password
         if (!email || !password) {
             return next(new errorHandling("Email or password is missing", 400))
         }
-        
+
+        // check email validation 
         if (!validateEmail(email)) {
             return next(new errorHandling("Please enter valid email address", 400))
         }
 
-
+        // fetch data from email
         const user = await admin.findOne({ email })
+        // no data
         if (!user) {
             return next(new errorHandling("Cannot find the user", 404))
         }
+        // compare password
         const isMatch = await bcrypt.compare(password, user.password)
+        // match fails
         if (!isMatch) {
             return next(new errorHandling("Incorrect Password", 401))
         }
+
+
         const payload = {
             userId: user._id,
             email: user.email
         }
+        // generate jwt token
         const token = jwt.sign(payload, process.env.SECRETKEY, { expiresIn: process.env.jwtExpires })
+        // send token and store on cookie
         res.cookie("auth_token", token, {
             httpOnly: true,
             sameSite: "Strict",
@@ -151,7 +163,7 @@ module.exports.login = async (req, res, next) => {
         })
     } catch (error) {
 
-        return next(new errorHandling(error.message, error.statusCode ||500))
+        return next(new errorHandling(error.message, error.statusCode || 500))
 
     }
 
@@ -164,13 +176,15 @@ module.exports.login = async (req, res, next) => {
 module.exports.checkJwt = (req, res, next) => {
     try {
         const token = req.cookies.auth_token;
+        // no token
         if (!token) {
             return next(new errorHandling("Please login first", 403))
 
         }
+        // check token
         jwt.verify(token, process.env.SECRETKEY, (err, decode) => {
             if (err) {
-                return next(new errorHandling("Your Session Expired please login again", 403))
+                return next(new errorHandling("Your Session Expired or invalid token login again", 403))
             }
             req.user = decode
 
@@ -187,6 +201,7 @@ module.exports.checkJwt = (req, res, next) => {
 
 module.exports.logout = (req, res, next) => {
     try {
+        //clear the cookie from browser
         res.clearCookie('auth_token', {
             httpOnly: true,
             sameSite: "Strict"
@@ -196,7 +211,7 @@ module.exports.logout = (req, res, next) => {
             message: "Logged out sucessfully"
         })
     } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode ||500))
+        return next(new errorHandling(error.message, error.statusCode || 500))
     }
 }
 
@@ -209,8 +224,9 @@ module.exports.updateAdmin = async (req, res, next) => {
         let details = ["name", "email", "password", "confirmPassword"]
         let updatedData = {}
 
+        // 
         if (req.body.email) {
-            
+            //validate email 
             if (!validateEmail(req.body.email)) {
                 return next(new errorHandling("Please enter valid email address", 400))
             }
@@ -218,17 +234,18 @@ module.exports.updateAdmin = async (req, res, next) => {
         }
 
         if (req.body.password) {
+            // validate password
             if (!req.body.password || !req.body.confirmPassword) {
                 return next(new errorHandling("Confirm password of password is missing", 400));
             }
-
+            // compare password
             if (req.body.password !== req.body.confirmPassword) {
 
                 return next(new errorHandling("Confirm Password or Password doesnot match", 400))
 
 
             }
-
+            // create password hash
             const salt = await bcrypt.genSalt(10);
             req.body.password = await bcrypt.hash(req.body.password, salt);
             req.body.confirmPassword = undefined
@@ -236,16 +253,18 @@ module.exports.updateAdmin = async (req, res, next) => {
         }
 
 
-
+        // itereate every object of req.body
         for (key in req.body) {
+            // check the key macthes to the object of req.body
             if (details.includes(key)) {
                 updatedData[key] = req.body[key]
             }
         }
-
+        // update the data in databse
         const updateUser = await admin.findByIdAndUpdate(userId, updatedData);
-        if(!updateUser){
-            return next(new errorHandling("User not found",404))
+        // no user
+        if (!updateUser) {
+            return next(new errorHandling("User not found", 404))
         }
         res.status(200).json({
             status: "Success",
@@ -266,6 +285,7 @@ module.exports.removeAdmin = async (req, res, next) => {
         }
         let adminId = req.params.id//from url
         const del = await admin.findByIdAndDelete(adminId)
+        // no admin
         if (!del) {
             throw new errorHandling("Admin not found", 404)
         }
@@ -285,13 +305,15 @@ module.exports.removeAdmin = async (req, res, next) => {
 
 module.exports.forgotPassword = async (req, res, next) => {
     try {
+        // destructuring
         let { email } = req.body
-        
+        // validate email
         if (!validateEmail(email)) {
             return next(new errorHandling("Please enter valid email address", 400))
         }
-
+        // check email in database
         const findMail = await admin.findOne({ email }, " -password -name")//exclude _id ,password and name
+        // no email
         if (!findMail) {
             return next(new errorHandling("Email not found", 404))
         }
@@ -302,7 +324,7 @@ module.exports.forgotPassword = async (req, res, next) => {
 
         // Set expiration time (e.g., 1 hour from now)
         const expirationTime = Date.now() + 900000; // 15 minutes in milliseconds
-
+        // update code and expiry time
         await admin.findByIdAndUpdate(findMail._id, { "code": resetToken, "resetExpiry": expirationTime })
         // Create the reset link
         const resetLink = `${process.env.URL}/admin/reset-password/${resetToken}`  // Use full URL (including 'http://')
@@ -315,7 +337,7 @@ module.exports.forgotPassword = async (req, res, next) => {
         <p>If you did not request this, please ignore this email.</p>
         `
 
-
+        //sending message
         let transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
@@ -356,7 +378,7 @@ module.exports.resetPassword = async (req, res, next) => {
         if (!req.body.password || !req.body.confirmPassword) {
             return next(new errorHandling("Confirm password of password is missing", 400));
         }
-
+        // destructuring
         let { password, confirmPassword } = req.body;
 
         // Check if the password and confirmPassword match
@@ -379,18 +401,19 @@ module.exports.resetPassword = async (req, res, next) => {
 
         // Find the admin using the reset code
         let adminCode = await admin.findOne({ code });
-
+        // no admin
         if (!adminCode) {
             return next(new errorHandling("Code expired or invalid", 404));
         }
 
         // Check if the reset code has expired
         const currentDate = Date.now();
+        // if time of database is lower than current time
         if (currentDate > adminCode.resetExpiry) {
             // Clear expired reset code fields
             adminCode.resetExpiry = undefined;
             adminCode.code = undefined;
-
+            // dave data in database
             await adminCode.save();
 
             // Return error response for expired code
@@ -408,10 +431,11 @@ module.exports.resetPassword = async (req, res, next) => {
                 new: true // Return the updated document
             }
         );
+        // after updating reset the expiry date and code
 
         changeAdmin.resetExpiry = undefined;
         changeAdmin.code = undefined;
-
+        // saving changes in database
         await changeAdmin.save();
 
 
