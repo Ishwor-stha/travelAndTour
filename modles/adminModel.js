@@ -34,7 +34,7 @@ const adminSchema = mongoose.Schema({
                     return false
                 }
                 const allowedDomains = ["gmail.com", "yahoo.com", "outlook.com"];
-                const emailDomain = email.split('@')[1]; // Get the part after '@'
+                const emailDomain = email.split('@')[1]; // Get the part after '@' ie [gmail.com,yahoo.com]
 
                 return allowedDomains.includes(emailDomain); // Check if email format is valid  reutrns true of false
             },

@@ -29,13 +29,33 @@ const limiter = rateLimit({
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 
+// filtering out duplicate query
+function preventHPP(req, res, next) {
+    const queryParams = req.query;
+    const seenParams = new Set();
+
+    // Filter out duplicate query parameters
+    Object.keys(queryParams).forEach(key => {
+        if (seenParams.has(key)) {
+            delete queryParams[key]; // Remove duplicates
+        } else {
+            seenParams.add(key);
+        }
+    });
+
+    // Pass the cleaned query parameters forward
+    req.query = queryParams;
+    next();
+}
 // Middleware to parse incoming JSON requests
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+app.use(express.json({limit: '10kb'}))//limiting the json body size to 10 kb
 //security 
 app.use(limiter)
 app.use(helmet())
+app.use(preventHPP)
 app.use(cors(corsOptions))
 //////////////////////////
 app.use(cookieParser())
@@ -54,7 +74,6 @@ async function databaseConnect() {
 
 // Call the database connection function
 databaseConnect();
-/****************************************************************************************************************** */
 // Mount the tour route
 app.use("/", tourRoute);
 app.use("/admin/", adminRoute);
@@ -76,4 +95,5 @@ const PORT = process.env.PORT || 3000;  // Use default port 3000 if not specifie
 // Start the server and listen on the specified port
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
+    console.log(`App is running on ${process.env.NODE_ENV} mode `);
 });
