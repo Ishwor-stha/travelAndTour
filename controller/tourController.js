@@ -1,6 +1,8 @@
 const Tour = require("../modles/tourModel");
 const { deleteImage } = require("../utils/deleteImage");
-const errorHandler = require("../utils/errorHandling")
+const errorHandler = require("../utils/errorHandling");
+const fs=require("fs")
+const path=require("path")
 module.exports.homePage = (req, res) => {
     res.status(200).json({
         status: "Success",
@@ -142,31 +144,55 @@ module.exports.updateTour = async (req, res, next) => {
         let id = req.params.id;
         let keys = ["name", "price", "description", "destination", "image", "category", "type", "duration", "discount"];
         let updatedData = {};
+
         // check whether the req.body has valid key
         for (let key in req.body) {
             if (keys.includes(key)) {
-                // adding new object to the empty object variables
-                updatedData[key] = req.body[key]
+                updatedData[key] = req.body[key];
             }
         }
+
+        let oldPhoto;
         if (req.file) {
             updatedData.image = req.file.path; // Update image if new file is uploaded
-          }
+            oldPhoto = await Tour.findById(id, "image");
+            if (oldPhoto && oldPhoto.image) {
+               
+            }
+        }
+
         // querying to database
-        const updateTour = await Tour.findByIdAndUpdate(id, updatedData);
+        const updateTour = await Tour.findByIdAndUpdate(id, updatedData, { new: true });
+        if (!updateTour) {
+            if (req.file) {
+                deleteImage(req.file.path);
+            }
+            return next(new errorHandler("Cannot update tour. Please try again later.", 500));
+        }
+
+        // Delete old image if a new one was uploaded
+        if (req.file && oldPhoto && oldPhoto.image) {
+            const rootPath = path.dirname(require.main.filename);
+            const oldImagePath = path.join(rootPath, oldPhoto.image);
+            if (fs.existsSync(oldImagePath)) {
+                fs.rmSync(oldImagePath);
+                console.log(`Deleted old photo: ${oldImagePath}`);
+            }
+        }
+
         // sending response
         res.status(200).json({
             status: "Success",
-            name:updateTour.name,
+            name: updateTour.name,
             updatedData
-
-        })
+        });
     } catch (error) {
-        // passing error to the error handling middleware
-        next(new errorHandler(error, 400));
-
+        if (req.file) {
+            deleteImage(req.file.path); // delete uploaded file in case of error
+        }
+        next(new errorHandler(error.message || "Something went wrong", 400));
     }
-}
+};
 
 // @method DELETE
 // @desc:controller to delete tour
