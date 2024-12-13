@@ -2,7 +2,7 @@ const dotenv = require('dotenv');
 const cookieParser = require("cookie-parser")
 const express = require("express");
 const mongoose = require("mongoose");
-// const multer = require('multer');
+const path=require("path");
 
 const tourRoute = require("./route/tourRoute");
 const adminRoute = require("./route/adminRoute")
@@ -31,6 +31,8 @@ const limiter = rateLimit({
 
 // Middleware to parse incoming JSON requests
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 //security 
 app.use(limiter)
 app.use(helmet())
@@ -53,33 +55,6 @@ async function databaseConnect() {
 // Call the database connection function
 databaseConnect();
 /****************************************************************************************************************** */
-// const storage = multer.diskStorage({
-//     destination: (req, file, cb) => {
-//         cb(null, 'uploads/');
-//     },
-//     filename: (req, file, cb) => {
-//         cb(null, Date.now() + '-' + file.originalname);
-//     }
-// });
-
-// const upload = multer({
-//     storage: storage,
-//     fileFilter: (req, file, cb) => {
-//         const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-//         if (!allowedMimeTypes.includes(file.mimetype)) {
-//             return cb(new Error('Invalid file type, only JPEG, PNG, and JPG are allowed'), false);
-//         }
-//         cb(null, true);
-//     },
-//     limits: {
-//         fileSize: 1 * 1024 * 1024 // Limit file size to 1MB
-//     }
-// });
-
-// Export upload as part of an object
-// module.exports.upload = upload;
-/****************************************************************************************************************** */
-
 // Mount the tour route
 app.use("/", tourRoute);
 app.use("/admin/", adminRoute);

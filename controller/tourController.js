@@ -1,4 +1,5 @@
 const Tour = require("../modles/tourModel");
+const { deleteImage } = require("../utils/deleteImage");
 const errorHandler = require("../utils/errorHandling")
 module.exports.homePage = (req, res) => {
     res.status(200).json({
@@ -104,9 +105,13 @@ module.exports.postTour = async (req, res, next) => {
         if (req.file) {
             data.image = req.file.path;  // Multer provides the file path (e.g., "uploads/1622492839145.jpg")
           }
-      
+     
         // querying to the database
         const newTour = await Tour.create(data);
+        if(!newTour){
+            deleteImage(req.file.path);
+            return next(new errorHandler("Cannot Create tour please try again later",500));
+        }
         // Manually delete the fields you don't want
         res.status(201).json({
             status: "Success",
@@ -119,6 +124,7 @@ module.exports.postTour = async (req, res, next) => {
         //     message: error.message
         // })
         // passing error to the error handling middleware
+        deleteImage(req.file.path)
         if(error.code==11000 || error.code=="E11000"){
             return next(new errorHandler("Tour name already exists",400))
         }
