@@ -2,7 +2,6 @@ const errorHandling = require("../utils/errorHandling")
 const admin = require("../modles/adminModel")
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
-const validator = require("validator"); // We'll use this to validate the email format
 const crypto = require('crypto')
 const { validateEmail } = require("../utils/emailValidation");
 const { messages } = require("../utils/message");
