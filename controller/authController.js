@@ -4,7 +4,6 @@ const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 const validator = require("validator"); // We'll use this to validate the email format
 const crypto = require('crypto')
-const nodemailer = require("nodemailer");
 const { validateEmail } = require("../utils/emailValidation");
 const { messages } = require("../utils/message");
 const sendMessage = require("../utils/sendMessage");
