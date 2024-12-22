@@ -1,8 +1,8 @@
 const Tour = require("../modles/tourModel");
 const { deleteImage } = require("../utils/deleteImage");
 const errorHandler = require("../utils/errorHandling");
-const fs=require("fs")
-const path=require("path")
+const fs = require("fs")
+const path = require("path")
 module.exports.homePage = (req, res) => {
     res.status(200).json({
         status: "Success",
@@ -22,7 +22,7 @@ module.exports.getTours = async (req, res, next) => {
         let condition = [];
 
         // destructuring query parameters
-        let { destination, category, type, duration, name } = req.query;
+        let { destination, category, type, duration, name, page = 1 } = req.query;
 
         // Handling the sorting logic
         if (req.query.price) {
@@ -50,8 +50,12 @@ module.exports.getTours = async (req, res, next) => {
         if (req.query.price) {
             tourQuery = tourQuery.sort({ price: sort });
         }
+        //pagination logic
+        page = parseInt(page)
+        const limit = 10;
+        const skip = (page - 1) * limit; // Skip results based on current page
 
-        const tour = await tourQuery;
+        const tour = await tourQuery.skip(skip).limit(limit);
         // if there is is tour 
         if (tour.length > 0) {
             res.status(200).json({
@@ -70,7 +74,7 @@ module.exports.getTours = async (req, res, next) => {
         //     message: error.message
         // });
         // passing erorr to the error handling middleware
-        next(new errorHandler(error,message,error.statusCode || 404))
+        next(new errorHandler(error, message, error.statusCode || 404))
 
 
 
@@ -106,18 +110,18 @@ module.exports.postTour = async (req, res, next) => {
         }
         if (req.file) {
             data.image = req.file.path;  // Multer provides the file path (e.g., "uploads/1622492839145.jpg")
-          }
-     
+        }
+
         // querying to the database
         const newTour = await Tour.create(data);
-        if(!newTour){
+        if (!newTour) {
             deleteImage(req.file.path);
-            return next(new errorHandler("Cannot Create tour please try again later",500));
+            return next(new errorHandler("Cannot Create tour please try again later", 500));
         }
         // Manually delete the fields you don't want
         res.status(201).json({
             status: "Success",
-            message:`${newTour.name} created sucessfully`
+            message: `${newTour.name} created sucessfully`
 
         })
     } catch (error) {
@@ -127,10 +131,10 @@ module.exports.postTour = async (req, res, next) => {
         // })
         // passing error to the error handling middleware
         deleteImage(req.file.path)
-        if(error.code==11000 || error.code=="E11000"){
-            return next(new errorHandler("Tour name already exists",400))
+        if (error.code == 11000 || error.code == "E11000") {
+            return next(new errorHandler("Tour name already exists", 400))
         }
-        next(new errorHandler(error.message,error.statusCode|| 500))
+        next(new errorHandler(error.message, error.statusCode || 500))
 
     }
 }
@@ -157,7 +161,7 @@ module.exports.updateTour = async (req, res, next) => {
             updatedData.image = req.file.path; // Update image if new file is uploaded
             oldPhoto = await Tour.findById(id, "image");
             if (oldPhoto && oldPhoto.image) {
-               
+
             }
         }
 

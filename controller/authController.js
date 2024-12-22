@@ -95,24 +95,6 @@ module.exports.createAdmin = async (req, res, next) => {
     }
 };
 
-// unnecessary controller delete this after testing
-// module.exports.deleteAll =async  (req, res) => {
-//     try {
-//         const deletes =await  admin.deleteMany({})
-//         res.json({
-//             stauts: "deleted"
-//         })
-
-//     } catch (error) {
-//         next(new errorHandling(error,400))
-//     }
-// }
-
-// const login=(req,res,next)=>{
-
-
-// }
-
 // @method POST
 // @desc:controller to login
 // @endpoint: localhost:6000/admin/login-admin
@@ -171,7 +153,6 @@ module.exports.login = async (req, res, next) => {
 
 // @method POST
 // @desc:controller to check cookies
-
 
 module.exports.checkJwt = (req, res, next) => {
     try {
