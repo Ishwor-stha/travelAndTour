@@ -41,19 +41,19 @@ module.exports.createAdmin = async (req, res, next) => {
     try {
         // if there is no password and confirm password
         if (!req.body.password || !req.body.confirmPassword) {
-            return next(new errorHandling("Confirm password or password is missing", 400));
+            return next(new errorHandling("Please confirm your password.", 400));
         }
         // destructuring the fields from req.body
         const { name, password, confirmPassword, email } = req.body;
         // no name and email
         if (!name || !email) {
-            return next(new errorHandling("Name and Email are required", 400));
+            return next(new errorHandling("Name or  Email is missing.Please check and try again.", 400));
         }
 
 
         // Check if password and confirmPassword match
         if (password !== confirmPassword) {
-            return next(new errorHandling("Password or confirm password do not match", 400))
+            return next(new errorHandling("Password or confirm password does not match.Please try again.", 400))
 
         }
 
@@ -64,13 +64,13 @@ module.exports.createAdmin = async (req, res, next) => {
             confirmPassword,
             email
         });
-
+        if(!newAdmin || Object.keys(newAdmin)<=0)return next(new errorHandling("Cannot create admin.Please try again.",500));
         // await newAdmin.save();  // Save the admin
 
         // Respond with success
         res.status(201).json({
             status: "Success",
-            message: "Account created successfully"
+            message: "Account created successfully."
         });
     } catch (error) {
         // Catch validation errors or other errors
@@ -83,7 +83,7 @@ module.exports.createAdmin = async (req, res, next) => {
         if (error.code === 11000) {
 
             // Unique constraint violation (e.g., duplicate name or email)
-            return next(new errorHandling("Please try a different name or email", 409))
+            return next(new errorHandling("Please try a different name or email.", 409))
 
         }
 
@@ -105,25 +105,25 @@ module.exports.login = async (req, res, next) => {
         let { email, password } = req.body
         // if no email and password
         if (!email || !password) {
-            return next(new errorHandling("Email or password is missing", 400))
+            return next(new errorHandling("Email or password is missing.Please try again.", 400))
         }
 
         // check email validation 
         if (!validateEmail(email)) {
-            return next(new errorHandling("Please enter valid email address", 400))
+            return next(new errorHandling("Please enter valid email address.", 400))
         }
 
         // fetch data from email
         const user = await admin.findOne({ email })
         // no data
         if (!user) {
-            return next(new errorHandling("Cannot find the user", 404))
+            return next(new errorHandling("Cannot find the user from this email address.", 404))
         }
         // compare password
         const isMatch = await bcrypt.compare(password, user.password)
         // match fails
         if (!isMatch) {
-            return next(new errorHandling("Incorrect Password", 400))
+            return next(new errorHandling("Password doesnot match.Please enter correct password.", 400))
         }
 
 
@@ -141,7 +141,7 @@ module.exports.login = async (req, res, next) => {
         })
         return res.status(200).json({
             status: "success",
-            message: `Hello ${user.name}`,
+            message: `Hello ${user.name}.`,
         })
     } catch (error) {
 
@@ -159,15 +159,15 @@ module.exports.checkJwt = (req, res, next) => {
         const token = req.cookies.auth_token;
         // no token
         if (!token) {
-            return next(new errorHandling("Please login first", 403))
+            return next(new errorHandling("Please login first.", 403))
 
         }
         // check token
         jwt.verify(token, process.env.SECRETKEY, (err, decode) => {
             if (err) {
-                return next(new errorHandling("Your Session Expired or invalid token login again", 403))
+                return next(new errorHandling("Your session has expired.Please login again. ", 403))
             }
-            req.user = decode
+            req.user = decode;
 
             next()
         })
@@ -182,6 +182,8 @@ module.exports.checkJwt = (req, res, next) => {
 
 module.exports.logout = (req, res, next) => {
     try {
+        const token = req.cookies.auth_token;
+        if(!token)return next(new errorHandling("Please login first.",403));
         //clear the cookie from browser
         res.clearCookie('auth_token', {
             httpOnly: true,
@@ -189,7 +191,7 @@ module.exports.logout = (req, res, next) => {
         })
         return res.status(200).json({
             status: "Sucess",
-            message: "Logged out sucessfully"
+            message: "You have been logged out."
         })
     } catch (error) {
         return next(new errorHandling(error.message, error.statusCode || 500))
@@ -197,7 +199,7 @@ module.exports.logout = (req, res, next) => {
 }
 
 // @method patch
-// @desc:controller to create new admin
+// @desc:controller to create update admin
 // @endpoint: localhost:6000/admin/create-admin
 module.exports.updateAdmin = async (req, res, next) => {
     try {
@@ -209,7 +211,7 @@ module.exports.updateAdmin = async (req, res, next) => {
         if (req.body.email) {
             //validate email 
             if (!validateEmail(req.body.email)) {
-                return next(new errorHandling("Please enter valid email address", 400))
+                return next(new errorHandling("Please enter valid email address.", 400))
             }
 
         }
@@ -217,12 +219,12 @@ module.exports.updateAdmin = async (req, res, next) => {
         if (req.body.password) {
             // validate password
             if (!req.body.password || !req.body.confirmPassword) {
-                return next(new errorHandling("Confirm password of password is missing", 400));
+                return next(new errorHandling("Confirm password of password is missing.Please try again.", 400));
             }
             // compare password
             if (req.body.password !== req.body.confirmPassword) {
 
-                return next(new errorHandling("Confirm Password or Password doesnot match", 400))
+                return next(new errorHandling("Confirm Password or Password doesnot match.Please try again.", 400))
 
 
             }
@@ -245,11 +247,11 @@ module.exports.updateAdmin = async (req, res, next) => {
         const updateUser = await admin.findByIdAndUpdate(userId, updatedData);
         // no user
         if (!updateUser) {
-            return next(new errorHandling("User not found", 404))
+            return next(new errorHandling("Cannot update data.Please try again.", 500));
         }
         res.status(200).json({
             status: "Success",
-            message: "Details changed sucessfully"
+            message: "Details changed sucessfully."
         })
     } catch (error) {
         return next(new errorHandling(error.message, error.statusCode || 500))
@@ -262,17 +264,17 @@ module.exports.updateAdmin = async (req, res, next) => {
 module.exports.removeAdmin = async (req, res, next) => {
     try {
         if (!req.params.id) {
-            return next(new errorHandling("Something went wrong", 400))
+            return next(new errorHandling("Please provide Id of an Admin.", 400));
         }
         let adminId = req.params.id//from url
         const del = await admin.findByIdAndDelete(adminId)
         // no admin
         if (!del) {
-            throw new errorHandling("Admin not found", 404)
+            throw new errorHandling("Admin not .Please try again.", 404)
         }
         res.status(200).json({
             status: "Success",
-            message: "Admin Deleted"
+            message: "Admin Deleted."
         })
     } catch (error) {
         return next(new errorHandling(error.message, error.statusCode || 500))
@@ -287,16 +289,16 @@ module.exports.removeAdmin = async (req, res, next) => {
 module.exports.forgotPassword = async (req, res, next) => {
     try {
         // destructuring
-        let { email } = req.body
+        let { email } = req.body;
         // validate email
         if (!validateEmail(email)) {
-            return next(new errorHandling("Please enter valid email address", 400))
+            return next(new errorHandling("Please enter valid email address.", 400))
         }
         // check email in database
         const findMail = await admin.findOne({ email }, " -password")//exclude _id ,password and name
         // no email
         if (!findMail || Object.keys(findMail).length <= 0) {
-            return next(new errorHandling("Email not found", 404))
+            return next(new errorHandling("Email not found.Please enter correct email address.", 404))
         }
 
         //                               message part
@@ -312,11 +314,13 @@ module.exports.forgotPassword = async (req, res, next) => {
         console.log(resetLink)
         // Construct the email message
         const message = messages(resetLink);
+
+        // send message
         await sendMessage(next, message, "Reset link", findMail.email, findMail.name)
 
         res.status(200).json({
             status: "Success",
-            message: "Password Reset Email Send"
+            message: "Password Reset Email Send."
         })
 
     } catch (error) {
@@ -330,14 +334,14 @@ module.exports.resetPassword = async (req, res, next) => {
     try {
         // Check if password and confirmPassword are provided
         if (!req.body.password || !req.body.confirmPassword) {
-            return next(new errorHandling("Confirm password of password is missing", 400));
+            return next(new errorHandling("Confirm password or password is missing.Please try again.", 400));
         }
         // destructuring
         let { password, confirmPassword } = req.body;
 
         // Check if the password and confirmPassword match
         if (password !== confirmPassword) {
-            return next(new errorHandling("Password and confirm password do not match", 400));
+            return next(new errorHandling("Password and confirm password do not match.Please enter correct password.", 400));
         } else {
             // Hash the password
             const salt = await bcrypt.genSalt(10);
@@ -357,7 +361,7 @@ module.exports.resetPassword = async (req, res, next) => {
         let adminCode = await admin.findOne({ code });
         // no admin
         if (!adminCode) {
-            return next(new errorHandling("Code expired or invalid", 400));
+            return next(new errorHandling("Code expired or invalid.Please request new one.", 400));
         }
 
         // Check if the reset code has expired
@@ -371,7 +375,7 @@ module.exports.resetPassword = async (req, res, next) => {
             await adminCode.save();
 
             // Return error response for expired code
-            return next(new errorHandling("Code has expired. Please request a new one.", 404));
+            return next(new errorHandling("Code has expired. Please request a new one.", 400));
         }
 
         // Update the admin's password and clear reset fields
@@ -404,7 +408,6 @@ module.exports.resetPassword = async (req, res, next) => {
         });
 
     } catch (error) {
-        console.error("Error in resetPassword:", error);
-        return next(new errorHandling("Something went wrong", error.statusCode || 500));
+        return next(new errorHandling(error.message, error.statusCode || 500));
     }
 };
