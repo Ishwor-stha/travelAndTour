@@ -6,6 +6,8 @@ const validator = require("validator"); // We'll use this to validate the email 
 const crypto = require('crypto')
 const nodemailer = require("nodemailer");
 const { validateEmail } = require("../utils/emailValidation");
+const { messages } = require("../utils/message");
+const sendMessage = require("../utils/sendMessage");
 
 
 
@@ -141,7 +143,7 @@ module.exports.login = async (req, res, next) => {
         const isMatch = await bcrypt.compare(password, user.password)
         // match fails
         if (!isMatch) {
-            return next(new errorHandling("Incorrect Password", 401))
+            return next(new errorHandling("Incorrect Password", 400))
         }
 
 
@@ -312,9 +314,9 @@ module.exports.forgotPassword = async (req, res, next) => {
             return next(new errorHandling("Please enter valid email address", 400))
         }
         // check email in database
-        const findMail = await admin.findOne({ email }, " -password -name")//exclude _id ,password and name
+        const findMail = await admin.findOne({ email }, " -password")//exclude _id ,password and name
         // no email
-        if (!findMail) {
+        if (!findMail || Object.keys(findMail).length <= 0) {
             return next(new errorHandling("Email not found", 404))
         }
 
@@ -330,40 +332,13 @@ module.exports.forgotPassword = async (req, res, next) => {
         const resetLink = `${process.env.URL}/admin/reset-password/${resetToken}`  // Use full URL (including 'http://')
         console.log(resetLink)
         // Construct the email message
-        const message = `
-        <p>Hello,</p>
-        <p>We received a request to reset your password. Please click the link below to reset your password:</p>
-        <p><a href="${resetLink}" target="_blank">Reset Password</a></p> <!-- Added target="_blank" to open in a new tab -->
-        <p>If you did not request this, please ignore this email.</p>
-        `
+        const message = messages(resetLink);
+        await sendMessage(next, message, "Reset link", findMail.email, findMail.name)
 
-        //sending message
-        let transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.gmailUser,
-                pass: process.env.gmailPassword
-            }
-        });
-
-        let mailOptions = await {
-            from: 'suzankhadka710@gmail.com',
-            to: findMail.email,
-            subject: 'Reset link',
-            html: message
-        };
-
-        transporter.sendMail(mailOptions, await function (error, info) {
-            if (error) {
-                return next(new errorHandling(error.message, error.statusCode || 500))
-            } else {
-                console.log('Email sent: ' + info.response)
-                res.status(200).json({
-                    status: "Success",
-                    message: "Password Reset Email Send"
-                })
-            }
-        });
+        res.status(200).json({
+            status: "Success",
+            message: "Password Reset Email Send"
+        })
 
     } catch (error) {
         return next(new errorHandling(error.message, error.statusCode || 400))
@@ -403,7 +378,7 @@ module.exports.resetPassword = async (req, res, next) => {
         let adminCode = await admin.findOne({ code });
         // no admin
         if (!adminCode) {
-            return next(new errorHandling("Code expired or invalid", 404));
+            return next(new errorHandling("Code expired or invalid", 400));
         }
 
         // Check if the reset code has expired
