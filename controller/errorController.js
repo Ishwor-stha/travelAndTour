@@ -6,14 +6,14 @@ module.exports=(err,req,res,next)=>{
             message:err.message,
             detail:err.stack
     
-        })
+        });
 
     }else{
         res.status(err.statusCode).json({
             status:err.status,
             message:err.message
           
-        })
+        });
     }
     
 }

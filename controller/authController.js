@@ -1,8 +1,8 @@
-const errorHandling = require("../utils/errorHandling")
-const admin = require("../modles/adminModel")
-const bcrypt = require("bcryptjs")
-const jwt = require("jsonwebtoken")
-const crypto = require('crypto')
+const errorHandling = require("../utils/errorHandling");
+const admin = require("../modles/adminModel");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const crypto = require('crypto');
 const { validateEmail } = require("../utils/emailValidation");
 const { messages } = require("../utils/message");
 const sendMessage = require("../utils/sendMessage");
@@ -15,20 +15,20 @@ const sendMessage = require("../utils/sendMessage");
 
 module.exports.getAllAdmin = async (req, res, next) => {
     try {
-        const allAdmin = await admin.find({}, "-_id -password")//exclude _id and password
+        const allAdmin = await admin.find({}, "-_id -password");//exclude _id and password
         // if there is no admin
         if (!allAdmin) {
             res.status(404).json({
                 status: "sucess",
                 message: "No data found"
-            })
+            });
         }
         res.status(200).json({
             status: "success",
             allAdmin
-        })
+        });
     } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500))
+        return next(new errorHandling(error.message, error.statusCode || 500));
 
     }
 }
@@ -53,7 +53,7 @@ module.exports.createAdmin = async (req, res, next) => {
 
         // Check if password and confirmPassword match
         if (password !== confirmPassword) {
-            return next(new errorHandling("Password or confirm password does not match.Please try again.", 400))
+            return next(new errorHandling("Password or confirm password does not match.Please try again.", 400));
 
         }
 
@@ -64,7 +64,7 @@ module.exports.createAdmin = async (req, res, next) => {
             confirmPassword,
             email
         });
-        if(!newAdmin || Object.keys(newAdmin)<=0)return next(new errorHandling("Cannot create admin.Please try again.",500));
+        if (!newAdmin || Object.keys(newAdmin) <= 0) return next(new errorHandling("Cannot create admin.Please try again.", 500));
         // await newAdmin.save();  // Save the admin
 
         // Respond with success
@@ -77,20 +77,20 @@ module.exports.createAdmin = async (req, res, next) => {
         if (error.name === "ValidationError") {
             // console.log("\n")
 
-            return next(new errorHandling(error, 422))
+            return next(new errorHandling(error.message, error.statusCode || 500));
         }
         // catch duplicate key error
         if (error.code === 11000) {
 
             // Unique constraint violation (e.g., duplicate name or email)
-            return next(new errorHandling("Please try a different name or email.", 409))
+            return next(new errorHandling("Please try a different name or email.", 409));
 
         }
 
         //(server errors)
 
 
-        return next(new errorHandling("Something went wrong on the server", 500))
+        return next(new errorHandling("Something went wrong on the server", 500));
 
     }
 };
@@ -102,50 +102,50 @@ module.exports.createAdmin = async (req, res, next) => {
 module.exports.login = async (req, res, next) => {
     try {
         // destrcturing
-        let { email, password } = req.body
+        let { email, password } = req.body;
         // if no email and password
         if (!email || !password) {
-            return next(new errorHandling("Email or password is missing.Please try again.", 400))
+            return next(new errorHandling("Email or password is missing.Please try again.", 400));
         }
 
         // check email validation 
         if (!validateEmail(email)) {
-            return next(new errorHandling("Please enter valid email address.", 400))
+            return next(new errorHandling("Please enter valid email address.", 400));
         }
 
         // fetch data from email
-        const user = await admin.findOne({ email })
+        const user = await admin.findOne({ email });
         // no data
         if (!user) {
-            return next(new errorHandling("Cannot find the user from this email address.", 404))
+            return next(new errorHandling("Cannot find the user from this email address.", 404));
         }
         // compare password
-        const isMatch = await bcrypt.compare(password, user.password)
+        const isMatch = await bcrypt.compare(password, user.password);
         // match fails
         if (!isMatch) {
-            return next(new errorHandling("Password doesnot match.Please enter correct password.", 400))
+            return next(new errorHandling("Password doesnot match.Please enter correct password.", 400));
         }
 
 
         const payload = {
             userId: user._id,
             email: user.email
-        }
+        };
         // generate jwt token
-        const token = jwt.sign(payload, process.env.SECRETKEY, { expiresIn: process.env.jwtExpires })
+        const token = jwt.sign(payload, process.env.SECRETKEY, { expiresIn: process.env.jwtExpires });
         // send token and store on cookie
         res.cookie("auth_token", token, {
             httpOnly: true,
             sameSite: "Strict",
             maxAge: 3600 * 1000
-        })
+        });
         return res.status(200).json({
             status: "success",
             message: `Hello ${user.name}.`,
-        })
+        });
     } catch (error) {
 
-        return next(new errorHandling(error.message, error.statusCode || 500))
+        return next(new errorHandling(error.message, error.statusCode || 500));
 
     }
 
@@ -159,20 +159,20 @@ module.exports.checkJwt = (req, res, next) => {
         const token = req.cookies.auth_token;
         // no token
         if (!token) {
-            return next(new errorHandling("Please login first.", 403))
+            return next(new errorHandling("Please login first.", 403));
 
         }
         // check token
         jwt.verify(token, process.env.SECRETKEY, (err, decode) => {
             if (err) {
-                return next(new errorHandling("Your session has expired.Please login again. ", 403))
+                return next(new errorHandling("Your session has expired.Please login again. ", 403));
             }
             req.user = decode;
 
-            next()
+            next();
         })
     } catch (error) {
-        return next(new errorHandling(error.message, 500))
+        return next(new errorHandling(error.message, 500));
     }
 }
 
@@ -183,18 +183,18 @@ module.exports.checkJwt = (req, res, next) => {
 module.exports.logout = (req, res, next) => {
     try {
         const token = req.cookies.auth_token;
-        if(!token)return next(new errorHandling("Please login first.",403));
+        if (!token) return next(new errorHandling("Please login first.", 403));
         //clear the cookie from browser
         res.clearCookie('auth_token', {
             httpOnly: true,
             sameSite: "Strict"
-        })
+        });
         return res.status(200).json({
             status: "Sucess",
             message: "You have been logged out."
-        })
+        });
     } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500))
+        return next(new errorHandling(error.message, error.statusCode || 500));
     }
 }
 
@@ -203,15 +203,15 @@ module.exports.logout = (req, res, next) => {
 // @endpoint: localhost:6000/admin/create-admin
 module.exports.updateAdmin = async (req, res, next) => {
     try {
-        const userId = req.user.userId//from checkJwt controller
-        let details = ["name", "email", "password", "confirmPassword"]
-        let updatedData = {}
+        const userId = req.user.userId;//from checkJwt controller
+        let details = ["name", "email", "password", "confirmPassword"];
+        let updatedData = {};
 
         // 
         if (req.body.email) {
             //validate email 
             if (!validateEmail(req.body.email)) {
-                return next(new errorHandling("Please enter valid email address.", 400))
+                return next(new errorHandling("Please enter valid email address.", 400));
             }
 
         }
@@ -224,14 +224,14 @@ module.exports.updateAdmin = async (req, res, next) => {
             // compare password
             if (req.body.password !== req.body.confirmPassword) {
 
-                return next(new errorHandling("Confirm Password or Password doesnot match.Please try again.", 400))
+                return next(new errorHandling("Confirm Password or Password doesnot match.Please try again.", 400));
 
 
             }
             // create password hash
             const salt = await bcrypt.genSalt(10);
             req.body.password = await bcrypt.hash(req.body.password, salt);
-            req.body.confirmPassword = undefined
+            req.body.confirmPassword = undefined;
 
         }
 
@@ -240,7 +240,7 @@ module.exports.updateAdmin = async (req, res, next) => {
         for (key in req.body) {
             // check the key macthes to the object of req.body
             if (details.includes(key)) {
-                updatedData[key] = req.body[key]
+                updatedData[key] = req.body[key];
             }
         }
         // update the data in databse
@@ -252,9 +252,9 @@ module.exports.updateAdmin = async (req, res, next) => {
         res.status(200).json({
             status: "Success",
             message: "Details changed sucessfully."
-        })
+        });
     } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500))
+        return next(new errorHandling(error.message, error.statusCode || 500));
     }
 
 }
@@ -263,21 +263,20 @@ module.exports.updateAdmin = async (req, res, next) => {
 // @endpoint: localhost:6000/admin/delete-admin
 module.exports.removeAdmin = async (req, res, next) => {
     try {
-        if (!req.params.id) {
-            return next(new errorHandling("Please provide Id of an Admin.", 400));
-        }
-        let adminId = req.params.id//from url
-        const del = await admin.findByIdAndDelete(adminId)
+
+        const adminId = req.params.id;//from url
+        if (!adminId) return next(new errorHandling("No admin admin id is provided please try again.", 400));
+        const del = await admin.findByIdAndDelete(adminId);
         // no admin
         if (!del) {
-            throw new errorHandling("Admin not .Please try again.", 404)
+            throw new errorHandling("Admin not .Please try again.", 404);
         }
         res.status(200).json({
             status: "Success",
             message: "Admin Deleted."
-        })
+        });
     } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 500))
+        return next(new errorHandling(error.message, error.statusCode || 500));
 
     }
 
@@ -290,41 +289,41 @@ module.exports.forgotPassword = async (req, res, next) => {
     try {
         // destructuring
         let { email } = req.body;
+        if (!email) return next(new errorHandling("Please enter email address.", 400));
         // validate email
         if (!validateEmail(email)) {
-            return next(new errorHandling("Please enter valid email address.", 400))
+            return next(new errorHandling("Please enter valid email address.", 400));
         }
         // check email in database
-        const findMail = await admin.findOne({ email }, " -password")//exclude _id ,password and name
+        const findMail = await admin.findOne({ email }, " -password");//exclude _id ,password and name
         // no email
         if (!findMail || Object.keys(findMail).length <= 0) {
-            return next(new errorHandling("Email not found.Please enter correct email address.", 404))
+            return next(new errorHandling("Email not found.Please enter correct email address.", 404));
         }
 
         //                               message part
         //generate  token
-        const resetToken = await crypto.randomBytes(16).toString('hex')
+        const resetToken = await crypto.randomBytes(16).toString('hex');
 
         // Set expiration time (e.g., 1 hour from now)
         const expirationTime = Date.now() + 900000; // 15 minutes in milliseconds
         // update code and expiry time
-        await admin.findByIdAndUpdate(findMail._id, { "code": resetToken, "resetExpiry": expirationTime })
+        await admin.findByIdAndUpdate(findMail._id, { "code": resetToken, "resetExpiry": expirationTime });
         // Create the reset link
-        const resetLink = `${process.env.URL}/admin/reset-password/${resetToken}`  // Use full URL (including 'http://')
-        console.log(resetLink)
+        const resetLink = `${process.env.URL}/admin/reset-password/${resetToken}`;
         // Construct the email message
         const message = messages(resetLink);
 
         // send message
-        await sendMessage(next, message, "Reset link", findMail.email, findMail.name)
+        await sendMessage(next, message, "Reset link", findMail.email, findMail.name);
 
         res.status(200).json({
             status: "Success",
-            message: "Password Reset Email Send."
-        })
+            message: "Password Reset Email Send to mail."
+        });
 
     } catch (error) {
-        return next(new errorHandling(error.message, error.statusCode || 400))
+        return next(new errorHandling(error.message, error.statusCode || 500));
     }
 }
 // @desc: reset link with code
@@ -398,7 +397,7 @@ module.exports.resetPassword = async (req, res, next) => {
 
 
         if (!changeAdmin) {
-            return next(new errorHandling("Error updating password", 500));
+            return next(new errorHandling("Error updating password.Please try again.", 500));
         }
 
         // Return success response

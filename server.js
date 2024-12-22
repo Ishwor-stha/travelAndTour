@@ -1,86 +1,48 @@
 const dotenv = require('dotenv');
-const cookieParser = require("cookie-parser")
+const cookieParser = require("cookie-parser");
 const express = require("express");
-const mongoose = require("mongoose");
 const path=require("path");
+const {databaseConnect}=require("./utils/databaseConnect");
 
 const tourRoute = require("./route/tourRoute");
-const adminRoute = require("./route/adminRoute")
+const adminRoute = require("./route/adminRoute");
 const errorController = require('./controller/errorController');
-const errorHandling = require('./utils/errorHandling');
 const app = express();
 // security packages
-const rateLimit = require('express-rate-limit');
-const helmet = require('helmet')
-const cors = require('cors')
+const {limiter} = require("./utils/rateLimit");
+const helmet = require('helmet');
+const cors = require('cors');
+const {preventHPP}=require("./utils/preventHpp");
 
 const corsOptions = {
     origin: process.env.URL
 }
-// Load environment variables from .env file
+// loading environment variables from .env file
 dotenv.config();
 
-// Define rate limit configuration
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes in milliseconds
-    max: 100, // limit each IP to 100 requests per windowMs
-    message: 'Too many requests from this IP, please try again after 15 minutes.',
-    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-});
-
-// filtering out duplicate query
-function preventHPP(req, res, next) {
-    const queryParams = req.query;
-    const seenParams = new Set();
-
-    // Filter out duplicate query parameters
-    Object.keys(queryParams).forEach(key => {
-        if (seenParams.has(key)) {
-            delete queryParams[key]; // Remove duplicates
-        } else {
-            seenParams.add(key);
-        }
-    });
-
-    // Pass the cleaned query parameters forward
-    req.query = queryParams;
-    next();
-}
 // Middleware to parse incoming JSON requests
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(express.json({limit: '10kb'}))//limiting the json body size to 10 kb
 //security 
-app.use(limiter)
-app.use(helmet())
-app.use(preventHPP)
-app.use(cors(corsOptions))
+app.use(limiter);
+app.use(helmet());
+app.use(preventHPP);
+app.use(cors(corsOptions));
 //////////////////////////
-app.use(cookieParser())
+app.use(cookieParser());
 
 // Function to connect to the database
-async function databaseConnect() {
-    try {
-        await mongoose.connect(process.env.DATABASE);
-        console.log("Database connected successfully");
-    } catch (error) {
-        console.error(`Error connecting to the database: ${error.message}`);
-        // Handle error 
-        throw new errorHandling(error, 500);
-    }
-}
-
-// Call the database connection function
 databaseConnect();
+
 // Mount the tour route
-app.use("/", tourRoute);
-app.use("/admin/", adminRoute);
+app.use("/api/", tourRoute);
+app.use("/api/admin/", adminRoute);
 
 // Handle any unhandled routes with a 404 error
 app.all("*", (req, res) => {
-    res.status(404).json({
+    res.status(400).json({
         status: "fail",
         message: "Invalid website path"
     });

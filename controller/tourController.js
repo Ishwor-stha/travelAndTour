@@ -3,12 +3,7 @@ const { deleteImage } = require("../utils/deleteImage");
 const errorHandler = require("../utils/errorHandling");
 const fs = require("fs")
 const path = require("path")
-module.exports.homePage = (req, res) => {
-    res.status(200).json({
-        status: "Success",
-        message: "This is main page"
-    })
-}
+
 
 //@method :GET 
 //@Endpoint: localhost:6000/get-tours
@@ -51,7 +46,7 @@ module.exports.getTours = async (req, res, next) => {
             tourQuery = tourQuery.sort({ price: sort });
         }
         //pagination logic
-        page = parseInt(page)
+        page = parseInt(page);
         const limit = 10;
         const skip = (page - 1) * limit; // Skip results based on current page
 
@@ -74,7 +69,7 @@ module.exports.getTours = async (req, res, next) => {
         //     message: error.message
         // });
         // passing erorr to the error handling middleware
-        next(new errorHandler(error, message, error.statusCode || 404))
+        next(new errorHandler(error, message, error.statusCode || 404));
 
 
 
@@ -89,20 +84,20 @@ module.exports.getTours = async (req, res, next) => {
 //@desc:Adding the tours
 module.exports.postTour = async (req, res, next) => {
     try {
-        let data = {}
-        let keys = ["name", "price", "description", "destination", "image", "category", "type", "duration", "discount"]
+        let data = {};
+        let keys = ["name", "price", "description", "destination", "image", "category", "type", "duration", "discount"];
         //appling best practice to insert data by filtering
         for (let key in req.body) {
             // checks whether the req.body has the appropriate key
             if (keys.includes(key)) {
                 // checking if the data is number or string
                 if (typeof req.body[key] === "number") {
-                    data[key] = req.body[key]
+                    data[key] = req.body[key];
 
                 }
                 else {
                     // if the data is not number then convert it to the string for security concern
-                    data[key] = req.body[key].toString()
+                    data[key] = req.body[key].toString();
                 }
 
 
@@ -123,18 +118,18 @@ module.exports.postTour = async (req, res, next) => {
             status: "Success",
             message: `${newTour.name} created sucessfully`
 
-        })
+        });
     } catch (error) {
         // res.status(500).json({
         //     status: "Failed",
         //     message: error.message
         // })
         // passing error to the error handling middleware
-        deleteImage(req.file.path)
+        deleteImage(req.file.path);
         if (error.code == 11000 || error.code == "E11000") {
-            return next(new errorHandler("Tour name already exists", 400))
+            return next(new errorHandler("Tour name already exists", 400));
         }
-        next(new errorHandler(error.message, error.statusCode || 500))
+        next(new errorHandler(error.message, error.statusCode || 500));
 
     }
 }
@@ -146,7 +141,7 @@ module.exports.updateTour = async (req, res, next) => {
     try {
         // id from url
         let id = req.params.id;
-        if(!id)return next(new errorHandler("No tour id is given.Please try again.",400))
+        if(!id)return next(new errorHandler("No tour id is given.Please try again.",400));
         let keys = ["name", "price", "description", "destination", "image", "category", "type", "duration", "discount"];
         let updatedData = {};
 

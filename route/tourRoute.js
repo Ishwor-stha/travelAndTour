@@ -1,5 +1,5 @@
 const express = require("express");
-const multer=require("multer")
+const multer=require("multer");
 const Router = express.Router();
 const tourController = require("../controller/tourController.js");
 const { checkJwt } = require("../controller/authController.js");
@@ -11,7 +11,7 @@ const storage = multer.diskStorage({
         cb(null, 'uploads/');  // The folder to store uploaded files
     },
     filename: (req, file, cb) => {
-        cb(null, Date.now() + '-' + file.originalname);  // Use a timestamp to avoid overwriting
+        cb(null, Date.now() + '-' + file.originalname);  //  timestamp to make unique name
     }
 });
 
@@ -30,7 +30,6 @@ const upload = multer({
 });
 
 /*********************************Route****************************************************** */
-Router.route("/").get(tourController.homePage);
 Router.route("/get-tours").get(tourController.getTours);
 Router.route("/tour-admin/post-tour").post(checkJwt, upload.single('image'), tourController.postTour);
 Router.route("/tour-admin/update-tour/:id").patch(checkJwt, upload.single('image'), tourController.updateTour);
