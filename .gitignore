@@ -1,1 +1,2 @@
-git push --set-upstream origin main
+node_modules/
+.env
