@@ -146,6 +146,7 @@ module.exports.updateTour = async (req, res, next) => {
     try {
         // id from url
         let id = req.params.id;
+        if(!id)return next(new errorHandler("No tour id is given.Please try again.",400))
         let keys = ["name", "price", "description", "destination", "image", "category", "type", "duration", "discount"];
         let updatedData = {};
 
@@ -160,9 +161,7 @@ module.exports.updateTour = async (req, res, next) => {
         if (req.file) {
             updatedData.image = req.file.path; // Update image if new file is uploaded
             oldPhoto = await Tour.findById(id, "image");
-            if (oldPhoto && oldPhoto.image) {
-
-            }
+           
         }
 
         // querying to database
@@ -194,7 +193,7 @@ module.exports.updateTour = async (req, res, next) => {
         if (req.file) {
             deleteImage(req.file.path); // delete uploaded file in case of error
         }
-        next(new errorHandler(error.message || "Something went wrong", 400));
+        next(new errorHandler(error.message || "Something went wrong.Please try again.", 500));
     }
 };
 
@@ -205,17 +204,19 @@ module.exports.deleteTour = async (req, res, next) => {
     try {
         // id from url
         const id = req.params.id;
+        if(!id)return next(new errorHandler("Tour id is missing.Please try again. ",400));
         // querying the database
-        const del = await Tour.findByIdAndDelete(id)
+        const del = await Tour.findByIdAndDelete(id);
+        if(!del||Object.keys(del).length<=0)return next(new errorHandler("No Tour found.Please try again.",404));
         // sending response
         res.status(200).json({
             status: "Success",
-            message: `${del.name} deleted`
+            message: `${del.name} deleted .`
 
         })
     } catch (error) {
         // passing error to the error handling middleware
-        next(new errorHandler(error, 401))
+        next(new errorHandler(error.message,error.statusCode ||500));
 
 
     }
