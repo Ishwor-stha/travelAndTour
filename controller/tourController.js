@@ -69,13 +69,12 @@ module.exports.getTours = async (req, res, next) => {
         //     message: error.message
         // });
         // passing erorr to the error handling middleware
-        next(new errorHandler(error, message, error.statusCode || 404));
+        next(new errorHandler(error.message, error.statusCode || 404));
 
 
 
     }
 };
-
 
 
 
@@ -141,7 +140,7 @@ module.exports.updateTour = async (req, res, next) => {
     try {
         // id from url
         let id = req.params.id;
-        if(!id)return next(new errorHandler("No tour id is given.Please try again.",400));
+        if (!id) return next(new errorHandler("No tour id is given.Please try again.", 400));
         let keys = ["name", "price", "description", "destination", "image", "category", "type", "duration", "discount"];
         let updatedData = {};
 
@@ -156,7 +155,7 @@ module.exports.updateTour = async (req, res, next) => {
         if (req.file) {
             updatedData.image = req.file.path; // Update image if new file is uploaded
             oldPhoto = await Tour.findById(id, "image");
-           
+
         }
 
         // querying to database
@@ -199,10 +198,10 @@ module.exports.deleteTour = async (req, res, next) => {
     try {
         // id from url
         const id = req.params.id;
-        if(!id)return next(new errorHandler("Tour id is missing.Please try again. ",400));
+        if (!id) return next(new errorHandler("Tour id is missing.Please try again. ", 400));
         // querying the database
         const del = await Tour.findByIdAndDelete(id);
-        if(!del||Object.keys(del).length<=0)return next(new errorHandler("No Tour found.Please try again.",404));
+        if (!del || Object.keys(del).length <= 0) return next(new errorHandler("No Tour found.Please try again.", 404));
         // sending response
         res.status(200).json({
             status: "Success",
@@ -211,7 +210,7 @@ module.exports.deleteTour = async (req, res, next) => {
         })
     } catch (error) {
         // passing error to the error handling middleware
-        next(new errorHandler(error.message,error.statusCode ||500));
+        next(new errorHandler(error.message, error.statusCode || 500));
 
 
     }
