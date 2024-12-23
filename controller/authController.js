@@ -24,7 +24,7 @@ module.exports.getAllAdmin = async (req, res, next) => {
             });
         }
         res.status(200).json({
-            status: "success",
+            status: "Success",
             allAdmin
         });
     } catch (error) {
@@ -41,13 +41,13 @@ module.exports.createAdmin = async (req, res, next) => {
     try {
         // if there is no password and confirm password
         if (!req.body.password || !req.body.confirmPassword) {
-            return next(new errorHandling("Please confirm your password.", 400));
+            return next(new errorHandling("Password or confirm password is empty.Please try again.", 400));
         }
         // destructuring the fields from req.body
         const { name, password, confirmPassword, email } = req.body;
         // no name and email
         if (!name || !email) {
-            return next(new errorHandling("Name or  Email is missing.Please check and try again.", 400));
+            return next(new errorHandling("Name or Email is missing.Please check and try again.", 400));
         }
 
 
@@ -90,7 +90,7 @@ module.exports.createAdmin = async (req, res, next) => {
         //(server errors)
 
 
-        return next(new errorHandling("Something went wrong on the server", 500));
+        return next(new errorHandling("Something went wrong on the server.Please try again.", 500));
 
     }
 };
@@ -140,7 +140,7 @@ module.exports.login = async (req, res, next) => {
             maxAge: 3600 * 1000
         });
         return res.status(200).json({
-            status: "success",
+            status: "Success",
             message: `Hello ${user.name}.`,
         });
     } catch (error) {
@@ -184,13 +184,16 @@ module.exports.logout = (req, res, next) => {
     try {
         const token = req.cookies.auth_token;
         if (!token) return next(new errorHandling("Please login first.", 403));
+        const check=jwt.verify(token, process.env.SECRETKEY);
+        // if token verification fails
+        if(!check) return next(new errorHandling("Invalid token given.Please clear the browser and login again.",400)); 
         //clear the cookie from browser
         res.clearCookie('auth_token', {
             httpOnly: true,
             sameSite: "Strict"
         });
         return res.status(200).json({
-            status: "Sucess",
+            status: "Success",
             message: "You have been logged out."
         });
     } catch (error) {
@@ -269,11 +272,11 @@ module.exports.removeAdmin = async (req, res, next) => {
         const del = await admin.findByIdAndDelete(adminId);
         // no admin
         if (!del) {
-            throw new errorHandling("Admin not .Please try again.", 404);
+            throw new errorHandling("Failed to remove admin.Please try again.", 500);
         }
         res.status(200).json({
             status: "Success",
-            message: "Admin Deleted."
+            message: "Admin removed sucessfully."
         });
     } catch (error) {
         return next(new errorHandling(error.message, error.statusCode || 500));
@@ -402,7 +405,7 @@ module.exports.resetPassword = async (req, res, next) => {
 
         // Return success response
         res.status(200).json({
-            status: "success",
+            status: "Success",
             message: "Password changed successfully."
         });
 

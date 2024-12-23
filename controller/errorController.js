@@ -11,7 +11,7 @@ module.exports=(err,req,res,next)=>{
     }else{
         res.status(err.statusCode).json({
             status:err.status,
-            message:err.message
+            message:err.message ||"Something went wrong.Please try again."
           
         });
     }
