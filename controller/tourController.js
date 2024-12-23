@@ -82,7 +82,6 @@ module.exports.getTours = async (req, res, next) => {
 //@method :GET 
 //@Endpoint: localhost:6000/get-one-tour/:slug
 //@desc:Getting the detail of  tour 
-
 module.exports.getOneTour=async(req,res,next)=>{
     try {
         const {slug}=req.params;
