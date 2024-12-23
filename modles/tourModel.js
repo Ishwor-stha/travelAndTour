@@ -69,8 +69,8 @@ tourSchema.pre("findOneAndUpdate",function(next){
     if(update.name){
         update.slug=slugify(update.name);
     }
-    next()
-})
+    next();
+});
 
 const Tour=mongoose.model("tour",tourSchema);
 module.exports=Tour;
