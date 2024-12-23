@@ -1,5 +1,5 @@
 const express = require("express");
-const upload=require("../utils/multer.js");
+const upload = require("../utils/multer.js");
 const Router = express.Router();
 const tourController = require("../controller/tourController.js");
 const { checkJwt } = require("../controller/authController.js");

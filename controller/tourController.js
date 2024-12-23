@@ -46,7 +46,10 @@ module.exports.getTours = async (req, res, next) => {
             tourQuery = tourQuery.sort({ price: sort });
         }
         //pagination logic
+        //string to integer
         page = parseInt(page);
+        // page is <0 then set to 1 otherwise set page to roundup value of page
+        page=(page>0)?Math.ceil(page):1;
         const limit = 10;
         const skip = (page - 1) * limit; // Skip results based on current page
 

@@ -1,4 +1,4 @@
-const multer=require("multer");
+const multer = require("multer");
 //for image handling
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -22,4 +22,4 @@ const upload = multer({
         fileSize: 1 * 1024 * 1024  // Limit file size to 1MB
     }
 });
-module.exports=upload
+module.exports = upload
