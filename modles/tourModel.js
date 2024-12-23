@@ -1,4 +1,5 @@
 const mongoose=require("mongoose");
+const slugify=require("slugify");
 const tourSchema=new mongoose.Schema({
     name:{
         type:"String",
@@ -49,9 +50,27 @@ const tourSchema=new mongoose.Schema({
             },
             message:"Discount Must Be In Number"
         }
+    },
+    slug:{
+        type:String
     }
 
 });
+tourSchema.pre("save",function(next){
+    if(this.isModified("name")){
+        this.slug=slugify(this.name);
+        next();
+    }
+    next();
+
+})
+tourSchema.pre("findOneAndUpdate",function(next){
+    const update=this.getUpdate();
+    if(update.name){
+        update.slug=slugify(update.name);
+    }
+    next()
+})
 
 const Tour=mongoose.model("tour",tourSchema);
 module.exports=Tour;

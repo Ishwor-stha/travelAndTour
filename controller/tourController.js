@@ -49,7 +49,7 @@ module.exports.getTours = async (req, res, next) => {
         //string to integer
         page = parseInt(page);
         // page is <0 then set to 1 otherwise set page to roundup value of page
-        page=(page>0)?Math.ceil(page):1;
+        page = (page > 0) ? Math.ceil(page) : 1;
         const limit = 10;
         const skip = (page - 1) * limit; // Skip results based on current page
 
@@ -79,7 +79,26 @@ module.exports.getTours = async (req, res, next) => {
     }
 };
 
+//@method :GET 
+//@Endpoint: localhost:6000/get-one-tour/:slug
+//@desc:Getting the detail of  tour 
 
+module.exports.getOneTour=async(req,res,next)=>{
+    try {
+        const {slug}=req.params;
+        console.log(slug)
+        if(!slug) return next(new errorHandler("No slug given of tour.Please try again.",400));
+        const tour=await Tour.findOne({slug:slug});
+        if(!tour || Object.keys(tour).length<0) return next(new errorHandler("No tour found.Please try again",404));
+        res.status(200).json({
+            status:"Success",
+            tour
+        })
+
+    } catch (error) {
+        return next(new errorHandler(error.message,error.statusCode ||500));
+    }
+}
 
 //@EndPoint:localhost:6000/tour-admin/post-tour
 //@method:POST
@@ -153,7 +172,6 @@ module.exports.updateTour = async (req, res, next) => {
                 updatedData[key] = req.body[key];
             }
         }
-
         let oldPhoto;
         if (req.file) {
             updatedData.image = req.file.path; // Update image if new file is uploaded
@@ -163,7 +181,8 @@ module.exports.updateTour = async (req, res, next) => {
 
         // querying to database
         const updateTour = await Tour.findByIdAndUpdate(id, updatedData, { new: true });
-        if (!updateTour) {
+        // console.log(updateTour)
+        if (!updateTour ||Object.keys(updateTour).length<0) {
             if (req.file) {
                 deleteImage(req.file.path);
             }
@@ -218,3 +237,12 @@ module.exports.deleteTour = async (req, res, next) => {
 
     }
 }
+
+// module.exports.bookTour = (req, res, next) => {
+//     try {
+//         const { date, phone,email,time,age }=req.body;
+//         const {id}=req.params
+//     } catch (error) {
+//         return next(new errorHandler(error.message, error.statusCode || 500));
+//     }
+// }
