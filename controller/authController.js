@@ -159,13 +159,13 @@ module.exports.checkJwt = (req, res, next) => {
         const token = req.cookies.auth_token;
         // no token
         if (!token) {
-            return next(new errorHandling("Please login first.", 403));
+            return next(new errorHandling("Please login and try again.", 403));
 
         }
         // check token
         jwt.verify(token, process.env.SECRETKEY, (err, decode) => {
             if (err) {
-                return next(new errorHandling("Your session has expired.Please login again. ", 403));
+                return next(new errorHandling("Your session has been expired.Please login again. ", 403));
             }
             req.user = decode;
 
@@ -322,7 +322,7 @@ module.exports.forgotPassword = async (req, res, next) => {
 
         res.status(200).json({
             status: "Success",
-            message: "Password Reset Email Send to mail."
+            message: "Password reset email is send to mail."
         });
 
     } catch (error) {
