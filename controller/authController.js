@@ -391,8 +391,8 @@ module.exports.resetPassword = async (req, res, next) => {
                 new: true // Return the updated document
             }
         );
-        // after updating reset the expiry date and code
 
+        // after updating set the expiry date and code to undefined
         changeAdmin.resetExpiry = undefined;
         changeAdmin.code = undefined;
         // saving changes in database

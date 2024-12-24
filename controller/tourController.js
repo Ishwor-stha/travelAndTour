@@ -1,8 +1,12 @@
 const Tour = require("../modles/tourModel");
 const { deleteImage } = require("../utils/deleteImage");
 const errorHandler = require("../utils/errorHandling");
-const fs = require("fs")
-const path = require("path")
+const fs = require("fs");
+const path = require("path");
+const { validateEmail } = require("../utils/emailValidation");
+const { bookMessage } = require("../utils/bookingMessage");
+const { isValidNepaliPhoneNumber } = require("../utils/validatePhoneNumber");
+const sendMessage=require("../utils/sendMessage");
 
 
 //@method :GET 
@@ -82,19 +86,19 @@ module.exports.getTours = async (req, res, next) => {
 //@method :GET 
 //@Endpoint: localhost:6000/get-one-tour/:slug
 //@desc:Getting the detail of  tour 
-module.exports.getOneTour=async(req,res,next)=>{
+module.exports.getOneTour = async (req, res, next) => {
     try {
-        const {slug}=req.params;
-        if(!slug) return next(new errorHandler("No slug given of tour.Please try again.",400));
-        const tour=await Tour.findOne({slug:slug},"");
-        if(!tour || Object.keys(tour).length<0) return next(new errorHandler("No tour found.Please try again",404));
+        const { slug } = req.params;
+        if (!slug) return next(new errorHandler("No slug given of tour.Please try again.", 400));
+        const tour = await Tour.findOne({ slug: slug }, "");
+        if (!tour || Object.keys(tour).length < 0) return next(new errorHandler("No tour found.Please try again", 404));
         res.status(200).json({
-            status:"Success",
+            status: "Success",
             tour
         })
 
     } catch (error) {
-        return next(new errorHandler(error.message,error.statusCode ||500));
+        return next(new errorHandler(error.message, error.statusCode || 500));
     }
 }
 
@@ -180,7 +184,7 @@ module.exports.updateTour = async (req, res, next) => {
         // querying to database
         const updateTour = await Tour.findByIdAndUpdate(id, updatedData, { new: true });
         // console.log(updateTour)
-        if (!updateTour ||Object.keys(updateTour).length<0) {
+        if (!updateTour || Object.keys(updateTour).length < 0) {
             if (req.file) {
                 deleteImage(req.file.path);
             }
@@ -236,11 +240,21 @@ module.exports.deleteTour = async (req, res, next) => {
     }
 }
 
-// module.exports.bookTour = (req, res, next) => {
-//     try {
-//         const { date, phone,email,time,age }=req.body;
-//         const {id}=req.params
-//     } catch (error) {
-//         return next(new errorHandler(error.message, error.statusCode || 500));
-//     }
-// }
+module.exports.bookTour = async (req, res, next) => {
+    try {
+        console.log("Inside");
+        const { date, phone, email, time, age, nameOfTour } = req.body;
+        if (!date || !phone || !email || !time || !age || !nameOfTour) return next(new errorHandler("All fields are required.Please fill the form again.", 400));
+        if (!validateEmail(email)) return next(new errorHandler("Email address is not valid.Please try again.", 400));
+        if (!isValidNepaliPhoneNumber(phone)) return next(new errorHandler("Please enter valid phone number.", 400));
+        const message = bookMessage(date, phone, email, time, age, nameOfTour);
+        await sendMessage(next,message,"Tour booking alert",process.env.personal_message_gmail,"Astrapi Travel");
+        res.status(200).json({
+            status: "Success",
+            message: "Thank you for your booking! A confirmation email has been sent to Astrapi Travel and Tour"
+        });
+
+    } catch (error) {
+        return next(new errorHandler(error.message, error.statusCode || 500));
+    }
+}

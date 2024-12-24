@@ -16,7 +16,7 @@ module.exports.messages = (resetLink) => {
             </div>
             <div style="background-color: #f1f1f1; text-align: center; padding: 10px; border-radius: 0 0 8px 8px; font-size: 14px; color: #666;">
                 <p>Need help? Contact us at <a href=${process.env.company_email} style="color: #007BFF; text-decoration: none;">${process.env.company_email}</a></p>
-                <p>&copy; ${process.env.copyright}</p>
+                <p>&copy; ${new Date().getFullYear()} ${process.env.copyright}</p>
             </div>
         </div>
     `;
