@@ -27,6 +27,14 @@ const tourSchema=new mongoose.Schema({
         required:[true,"Category is missing"]
 
     },
+    tour_type:{
+        type:String,
+        required:[true,"Tour is missing tour type (Domestic,International)"],
+        enum:["Domestic","International"]
+    },
+    count:{
+        type:Number
+    },
     type:{
         type:String,
         default:"adventure"

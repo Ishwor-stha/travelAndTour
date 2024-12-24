@@ -41,6 +41,7 @@ const adminSchema = mongoose.Schema({
             message: "Please enter a valid email address"
         }
     },
+    
     code: {
         resetToken: String
     },
