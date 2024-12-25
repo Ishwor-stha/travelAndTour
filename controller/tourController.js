@@ -246,10 +246,15 @@ module.exports.bookTour = async (req, res, next) => {
         const { date, phone, email, time, age, nameOfTour } = req.body;
         // if data is missing
         if (!date || !phone || !email || !time || !age || !nameOfTour) return next(new errorHandler("All fields are required.Please fill the form again.", 400));
+        // email validation falils
         if (!validateEmail(email)) return next(new errorHandler("Email address is not valid.Please try again.", 400));
+        //phone number validation fails
         if (!isValidNepaliPhoneNumber(phone)) return next(new errorHandler("Please enter valid phone number.", 400));
+        // create message 
         const message = bookMessage(date, phone, email, time, age, nameOfTour);
+        // send message to the email
         await sendMessage(next,message,"Tour booking alert",process.env.personal_message_gmail,"Astrapi Travel");
+        // send response
         res.status(200).json({
             status: "Success",
             message: "Thank you for your booking! A confirmation email has been sent to Astrapi Travel and Tour"
