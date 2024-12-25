@@ -184,9 +184,9 @@ module.exports.logout = (req, res, next) => {
     try {
         const token = req.cookies.auth_token;
         if (!token) return next(new errorHandling("Please login first.", 403));
-        const check=jwt.verify(token, process.env.SECRETKEY);
+        const check = jwt.verify(token, process.env.SECRETKEY);
         // if token verification fails
-        if(!check) return next(new errorHandling("Invalid token given.Please clear the browser and login again.",400)); 
+        if (!check) return next(new errorHandling("Invalid token given.Please clear the browser and login again.", 400));
         //clear the cookie from browser
         res.clearCookie('auth_token', {
             httpOnly: true,
