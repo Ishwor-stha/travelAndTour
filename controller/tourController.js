@@ -242,8 +242,9 @@ module.exports.deleteTour = async (req, res, next) => {
 
 module.exports.bookTour = async (req, res, next) => {
     try {
-        console.log("Inside");
+        // destructring objects form req.body 
         const { date, phone, email, time, age, nameOfTour } = req.body;
+        // if data is missing
         if (!date || !phone || !email || !time || !age || !nameOfTour) return next(new errorHandler("All fields are required.Please fill the form again.", 400));
         if (!validateEmail(email)) return next(new errorHandler("Email address is not valid.Please try again.", 400));
         if (!isValidNepaliPhoneNumber(phone)) return next(new errorHandler("Please enter valid phone number.", 400));
