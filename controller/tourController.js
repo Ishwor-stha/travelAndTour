@@ -240,6 +240,10 @@ module.exports.deleteTour = async (req, res, next) => {
     }
 }
 
+// @method POST
+// @desc:controller to send a message to owner if customer books the tour
+// @endpoint:localhost:6000/tour-admin/delete-tour
+
 module.exports.bookTour = async (req, res, next) => {
     try {
         // destructring objects form req.body 
