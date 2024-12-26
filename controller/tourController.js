@@ -6,7 +6,7 @@ const path = require("path");
 const { validateEmail } = require("../utils/emailValidation");
 const { bookMessage } = require("../utils/bookingMessage");
 const { isValidNepaliPhoneNumber } = require("../utils/validatePhoneNumber");
-const sendMessage=require("../utils/sendMessage");
+const sendMessage = require("../utils/sendMessage");
 
 
 //@method :GET 
@@ -19,22 +19,40 @@ module.exports.getTours = async (req, res, next) => {
 
         // let query={}
         let condition = [];
+        let fields = ["placeName", "active_month", "destination", "category", "tour_type", "duration", "name",]
 
         // destructuring query parameters
-        let { destination, category, type, duration, name, page = 1 } = req.query;
+        let { page = 1 } = req.query;
 
         // Handling the sorting logic
-        if (req.query.price) {
-            sort = req.query.price === "asc" ? 1 : -1;
+        if (req.query.adult_price || req.query.youth_price || req.query.popularity) {
+            const { adult_price, youth_price, popularity } = req.query
+            if (adult_price) sort = adult_price === "asc" ? 1 : -1;
+            if (youth_price) sort = youth_price === "asc" ? 1 : -1;
+            if (popularity) sort = popularity === "asc" ? 1 : -1;
+
         }
+        for (let keys in req.query) {
+            if (fields.includes(keys)) {
+                if (keys === "active_month") {
+
+                    // new RegExp("pattern",flags) object is used to make a data case insensitive "i" stands for insensitive  
+                    condition.push({ active_month: { $in: [req.query[keys]] } });;;//i.e{ destination: /mustang/i }
+                }
+                else {
+                    condition.push({ [keys]: new RegExp(req.query[keys], "i") });
+                }
+            }
+        }
+
 
         // Building the condition for $or condition
         // new RegExp("pattern",flags) object is used to make a data case insensitive "i" stands for insensitive  
-        if (destination) condition.push({ destination: new RegExp(destination, 'i') });//i.e{ destination: /mustang/i }
-        if (category) condition.push({ category: new RegExp(category, 'i') });
-        if (type) condition.push({ type: new RegExp(type, 'i') });
-        if (duration) condition.push({ duration: duration });
-        if (name) condition.push({ name: new RegExp(name, 'i') });
+        // if (destination) condition.push({ destination: new RegExp(destination, 'i') });//i.e{ destination: /mustang/i }
+        // if (category) condition.push({ category: new RegExp(category, 'i') });
+        // if (type) condition.push({ type: new RegExp(type, 'i') });
+        // if (duration) condition.push({ duration: duration });
+        // if (name) condition.push({ name: new RegExp(name, 'i') });
         // console.log(condition)
 
         // Fetching the data from the database using $or condition for flexible matching
@@ -46,9 +64,13 @@ module.exports.getTours = async (req, res, next) => {
         }
 
         // If sorting by price 
-        if (req.query.price) {
-            tourQuery = tourQuery.sort({ price: sort });
+        if (req.query.adult_price || req.query.youth_price || req.query.popularity) {
+            if (req.query.popularity) tourQuery = tourQuery.sort({ popularity: sort });;
+            if (req.query.adult_price) tourQuery = tourQuery.sort({ adult_price: sort });
+            if (req.query.youth_price) tourQuery = tourQuery.sort({ youth_price: sort });
+
         }
+
         //pagination logic
         //string to integer
         page = parseInt(page);
@@ -59,24 +81,20 @@ module.exports.getTours = async (req, res, next) => {
 
         const tour = await tourQuery.skip(skip).limit(limit);
         // if there is is tour 
-        if (tour.length > 0) {
-            res.status(200).json({
-                status: "Success",
-                tourList: tour
-            });
-        } else {//if there is no tour
-            res.status(200).json({
-                status: "Success",
-                tourList: "No tour found"
-            });
-        }
+        if (!tour || Object.keys(tour).length <= 0) return next(new errorHandler("No tour found.", 404));
+
+        res.status(200).json({
+            status: "Success",
+            tourList: tour
+        });
+
     } catch (error) {
         // res.status(404).json({
         //     status: "Failed",
         //     message: error.message
         // });
         // passing erorr to the error handling middleware
-        next(new errorHandler(error.message, error.statusCode || 404));
+        next(new errorHandler(error.message, error.statusCode || 500));
 
 
 
@@ -108,54 +126,61 @@ module.exports.getOneTour = async (req, res, next) => {
 module.exports.postTour = async (req, res, next) => {
     try {
         let data = {};
-        let keys = ["name", "price", "description", "destination", "image", "category", "type", "duration", "discount"];
-        //appling best practice to insert data by filtering
+        const keys = [
+            "name", "adult_price", "youth_price", "description", "destination",
+            "category", "tour_type", "duration", "discount", "placeName",
+            "active_month", "popularity", "minimumGuest"
+        ];
+
+        // Insert data by filtering
         for (let key in req.body) {
-            // checks whether the req.body has the appropriate key
             if (keys.includes(key)) {
-                // checking if the data is number or string
                 if (typeof req.body[key] === "number") {
                     data[key] = req.body[key];
-
-                }
-                else {
-                    // if the data is not number then convert it to the string for security concern
+                } else if (req.body[key] != null) {
                     data[key] = req.body[key].toString();
                 }
-
-
             }
         }
-        if (req.file) {
-            data.image = req.file.path;  // Multer provides the file path (e.g., "uploads/1622492839145.jpg")
+        // console.log(req.files)
+        // console.log(req.body)
+
+        // Handle multiple file uploads (if present)
+        if (req.files) {
+            // Store all image file paths in an array
+            data.image = req.files.map(file => file.path);
         }
 
-        // querying to the database
+        // Create a new tour in the database
         const newTour = await Tour.create(data);
-        if (!newTour) {
-            deleteImage(req.file.path);
-            return next(new errorHandler("Cannot Create tour please try again later", 500));
+        if (!newTour || Object.keys(newTour).length === 0) {
+            // Delete uploaded files on failure
+            if (req.files) {
+                const uploadedFilePaths = req.files.map(file => file.path);
+                deleteImage(uploadedFilePaths);
+            }
+            return next(new errorHandler("Cannot create tour, please try again later", 500));
         }
-        // Manually delete the fields you don't want
+
+        // Successfully created the tour
         res.status(201).json({
             status: "Success",
-            message: `${newTour.name} created sucessfully`
-
+            message: `${newTour.name} created successfully`
         });
+
     } catch (error) {
-        // res.status(500).json({
-        //     status: "Failed",
-        //     message: error.message
-        // })
-        // passing error to the error handling middleware
-        deleteImage(req.file.path);
-        if (error.code == 11000 || error.code == "E11000") {
+        // Delete uploaded files immediately on error
+        if (req.files) {
+            const uploadedFilePaths = req.files.map(file => file.path);
+            deleteImage(uploadedFilePaths);
+        }
+        if (error.code === 11000 || error.code === "E11000") {
             return next(new errorHandler("Tour name already exists", 400));
         }
-        next(new errorHandler(error.message, error.statusCode || 500));
-
+        return next(new errorHandler(error.message, error.statusCode || 500));
     }
-}
+};
+
 
 // @method PATCH
 // @desc:A controller to update the existing data of data base
@@ -165,7 +190,8 @@ module.exports.updateTour = async (req, res, next) => {
         // id from url
         let id = req.params.id;
         if (!id) return next(new errorHandler("No tour id is given.Please try again.", 400));
-        let keys = ["name", "price", "description", "destination", "image", "category", "type", "duration", "discount"];
+        const keys = ["name", "adult_price", "youth_price", "description", "destination", "image", "category", "tour_type", "duration", "discount", "placeName", "active_month", "popularity", "minimumGuest"];
+
         let updatedData = {};
 
         // check whether the req.body has valid key
@@ -192,7 +218,7 @@ module.exports.updateTour = async (req, res, next) => {
         }
 
         // Delete old image if a new one was uploaded
-        if (req.file && oldPhoto && oldPhoto.image) {
+        if (req.files && oldPhoto) {
             const rootPath = path.dirname(require.main.filename);
             const oldImagePath = path.join(rootPath, oldPhoto.image);
             if (fs.existsSync(oldImagePath)) {
@@ -257,7 +283,7 @@ module.exports.bookTour = async (req, res, next) => {
         // create message 
         const message = bookMessage(date, phone, email, time, age, nameOfTour);
         // send message to the email
-        await sendMessage(next,message,"Tour booking alert",process.env.personal_message_gmail,"Astrapi Travel");
+        await sendMessage(next, message, "Tour booking alert", process.env.personal_message_gmail, "Astrapi Travel");
         // send response
         res.status(200).json({
             status: "Success",

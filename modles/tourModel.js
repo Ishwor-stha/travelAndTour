@@ -23,9 +23,14 @@ const tourSchema = new mongoose.Schema({
         required: [true, "A Tour Must have place name"]
     },
     image: {
-        type: "String",
-        required: [true, " Photo of Tour is missing"]
-    },
+        type: [String],  
+        validate: {
+            validator: function (images) {
+                return images && images.length > 0; // Ensure at least one image is provided
+            },
+            message: `At least one image is required for the tour ${this.image}`
+        }
+    },    
     category: {
         type: String,
         required: [true, "Category is missing"]//luxury,holiday,vacation
@@ -34,17 +39,18 @@ const tourSchema = new mongoose.Schema({
     tour_type: {
         type: String,
         required: [true, "Tour is missing tour type (Domestic,International)"],
-        enum: ["Domestic", "International"]
+        enum: ["domestic", "international"]
     },
     active_month: {
         type: [String],
         validate: {
-            validator: function (months) {
+            validator: function (req,months) {
+                
                 const validMonths = [
                     "january", "february", "march", "april", "may", "june",
                     "july", "august", "september", "october", "november", "december"
                 ];
-                for (const month of months) {
+                for (const month in months) {
                     if (!validMonths.includes(month.toLowerCase())) {
                         return false;
                     }
@@ -54,17 +60,17 @@ const tourSchema = new mongoose.Schema({
             message: "Active month must contain valid month names"
         }
     },
-    count: {
+    popularity: {
         type: Number,
         default: 0
     },
-    total_number_of_people: {
+    minimumGuest: {
         type: Number,
-        required: [true, "A tour must have a total number of people"],
-        min: [1, "Total number of people must be at least 1"],
+        required: [true, "A tour must have a minimum number of people"],
+        min: [1, " Mimimum  number of  people must be at least 1"],
         validate: {
             validator: Number.isInteger,
-            message: "Total number of people must be an integer"
+            message: "Minimum  number of people must be an integer"
         }
     },
     duration: {
@@ -77,7 +83,7 @@ const tourSchema = new mongoose.Schema({
             message: "Duration must be a number"
         }
     },
-    Discount: {
+    discount: {
         type: Number,
         default: 0,
         validate: {

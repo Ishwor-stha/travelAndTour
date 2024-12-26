@@ -1,14 +1,16 @@
 const multer = require("multer");
-//for image handling
+
+// Storage configuration
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/');  // The folder to store uploaded files
+        cb(null, 'uploads/');  // Destination folder for uploaded files
     },
     filename: (req, file, cb) => {
-        cb(null, Date.now() + '-' + file.originalname);  //  timestamp to make unique name
+        cb(null, Date.now() + '-' + file.originalname);  // Add timestamp to avoid name clashes
     }
 });
 
+// Multer upload configuration
 const upload = multer({
     storage: storage,
     fileFilter: (req, file, cb) => {
@@ -22,4 +24,5 @@ const upload = multer({
         fileSize: 1 * 1024 * 1024  // Limit file size to 1MB
     }
 });
-module.exports = upload
+
+module.exports = upload;
