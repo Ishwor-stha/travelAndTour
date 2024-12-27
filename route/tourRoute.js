@@ -18,5 +18,7 @@ Router.route("/get-tour/:slug").get(tourController.getOneTour);
 
 Router.route("/book-tour").post(tourController.bookTour);
 
+Router.route("/enquiry").post(tourController.enquiry);
+
 
 module.exports = Router;

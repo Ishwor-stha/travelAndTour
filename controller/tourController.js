@@ -8,6 +8,7 @@ const { bookMessage } = require("../utils/bookingMessage");
 const { isValidNepaliPhoneNumber } = require("../utils/validatePhoneNumber");
 const sendMessage = require("../utils/sendMessage");
 const {isValidNumber}=require("../utils/isValidNumber");
+const {enquiryMessage}=require("../utils/enquiryMessage");
 
 
 //@method :GET 
@@ -201,7 +202,7 @@ module.exports.updateTour = async (req, res, next) => {
                 updatedData[key] = req.body[key];
             }
         }
-        
+
         if(req.body.discount){
             if(!isValidNumber(req.body.discount))throw new Error("Please enter valid discount number");//straight to the catch block
             
@@ -304,5 +305,23 @@ module.exports.bookTour = async (req, res, next) => {
 
     } catch (error) {
         return next(new errorHandler(error.message, error.statusCode || 500));
+    }
+}
+module.exports.enquiry= async(req,res,next)=>{
+    try {
+        // name,email,contact,message
+        const{name,email,contact,question}=req.body;
+        if(!name || !email || !contact || !question)return next(new errorHandler("Some field is missing.Please fill up all the form.",400));
+        if (!validateEmail(email)) return next(new errorHandler("Email address is not valid.Please try again.", 400));
+        if (!isValidNepaliPhoneNumber(contact)) return next(new errorHandler("Please enter valid phone number.", 400));
+        const createMessage=enquiryMessage(name,email,contact,question);
+        await sendMessage(next,createMessage,"Enquiry message",email,name);
+        res.status(200).json({
+            status:"sucess",
+            message:"Your question is sent.Please wait for the reply."
+        })
+
+    } catch (error) {
+        return next(new errorHandler(error.message ,error.statusCode ||500));
     }
 }
