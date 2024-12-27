@@ -23,14 +23,14 @@ const tourSchema = new mongoose.Schema({
         required: [true, "A Tour Must have place name"]
     },
     image: {
-        type: [String],  
+        type: [String],
         validate: {
             validator: function (images) {
                 return images && images.length > 0; // Ensure at least one image is provided
             },
             message: `At least one image is required for the tour ${this.image}`
         }
-    },    
+    },
     category: {
         type: String,
         required: [true, "Category is missing"]//luxury,holiday,vacation
@@ -44,8 +44,8 @@ const tourSchema = new mongoose.Schema({
     active_month: {
         type: [String],
         validate: {
-            validator: function (req,months) {
-                
+            validator: function (req, months) {
+
                 const validMonths = [
                     "january", "february", "march", "april", "may", "june",
                     "july", "august", "september", "october", "november", "december"

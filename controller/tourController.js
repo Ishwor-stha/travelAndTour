@@ -7,6 +7,7 @@ const { validateEmail } = require("../utils/emailValidation");
 const { bookMessage } = require("../utils/bookingMessage");
 const { isValidNepaliPhoneNumber } = require("../utils/validatePhoneNumber");
 const sendMessage = require("../utils/sendMessage");
+const {isValidNumber}=require("../utils/isValidNumber");
 
 
 //@method :GET 
@@ -200,31 +201,41 @@ module.exports.updateTour = async (req, res, next) => {
                 updatedData[key] = req.body[key];
             }
         }
+        
+        if(req.body.discount){
+            if(!isValidNumber(req.body.discount))throw new Error("Please enter valid discount number");//straight to the catch block
+            
+        }
         let oldPhoto;
-        if (req.file) {
-            updatedData.image = req.file.path; // Update image if new file is uploaded
+        if (req.files) { 
+            updatedData.image = req.files.map(file => file.path); // Update image if new file is uploaded
             oldPhoto = await Tour.findById(id, "image");
 
         }
 
+        
+     
         // querying to database
         const updateTour = await Tour.findByIdAndUpdate(id, updatedData, { new: true });
         // console.log(updateTour)
         if (!updateTour || Object.keys(updateTour).length < 0) {
-            if (req.file) {
-                deleteImage(req.file.path);
+            if (req.files) {
+                deleteImage(updatedData.image);
             }
             return next(new errorHandler("Cannot update tour. Please try again later.", 500));
         }
 
         // Delete old image if a new one was uploaded
         if (req.files && oldPhoto) {
-            const rootPath = path.dirname(require.main.filename);
-            const oldImagePath = path.join(rootPath, oldPhoto.image);
-            if (fs.existsSync(oldImagePath)) {
-                fs.rmSync(oldImagePath);
-                console.log(`Deleted old photo: ${oldImagePath}`);
-            }
+             deleteImage(oldPhoto.image);
+           
+            // const rootPath = path.dirname(require.main.filename);
+
+            // const oldImagePath = path.join(rootPath, oldPhoto.image);
+            // if (fs.existsSync(oldImagePath)) {
+            //     fs.rmSync(oldImagePath);
+            //     console.log(`Deleted old photo: ${oldImagePath}`);
+            // }
         }
 
         // sending response
@@ -234,8 +245,9 @@ module.exports.updateTour = async (req, res, next) => {
             updatedData
         });
     } catch (error) {
-        if (req.file) {
-            deleteImage(req.file.path); // delete uploaded file in case of error
+        if (req.files) {
+            const uploadedFilePaths = req.files.map(file => file.path);
+            deleteImage(uploadedFilePaths);
         }
         next(new errorHandler(error.message || "Something went wrong.Please try again.", 500));
     }
