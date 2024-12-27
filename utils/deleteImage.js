@@ -18,7 +18,7 @@ module.exports.deleteImage = (filePaths) => {
                 fs.unlinkSync(filePath); // Delete the file
                 // console.log(`Deleted file: ${filePath}`);
             } else {
-                console.warn(`File not found: ${filePath}`);
+                console.log(`File not found: ${filePath}`);
             }
         } catch (error) {
             console.error(`Error deleting file ${filePath}:`, error.message);
