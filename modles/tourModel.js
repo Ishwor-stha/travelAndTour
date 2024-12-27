@@ -6,6 +6,11 @@ const tourSchema = new mongoose.Schema({
         required: [true, "Name of prodct  is missing"],
         unique: [true, "Tour name already exists"]
     },
+    country: {
+        type: "String",
+        required: [true, "Country of tour  is missing."],
+   
+    },
     adult_price: {
         type: Number,
         required: [true, "A adult price is missing"]

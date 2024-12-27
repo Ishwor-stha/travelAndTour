@@ -21,7 +21,7 @@ module.exports.getTours = async (req, res, next) => {
 
         // let query={}
         let condition = [];
-        let fields = ["placeName", "active_month", "destination", "category", "tour_type", "duration", "name",]
+        let fields = ["placeName", "active_month", "destination", "category", "tour_type", "duration", "name","country",]
 
         // destructuring query parameters
         let { page = 1 } = req.query;
@@ -131,7 +131,7 @@ module.exports.postTour = async (req, res, next) => {
         const keys = [
             "name", "adult_price", "youth_price", "description", "destination",
             "category", "tour_type", "duration", "discount", "placeName",
-            "active_month", "popularity", "minimumGuest"
+            "active_month", "popularity", "minimumGuest","country"
         ];
 
         // Insert data by filtering
@@ -192,7 +192,7 @@ module.exports.updateTour = async (req, res, next) => {
         // id from url
         let id = req.params.id;
         if (!id) return next(new errorHandler("No tour id is given.Please try again.", 400));
-        const keys = ["name", "adult_price", "youth_price", "description", "destination", "image", "category", "tour_type", "duration", "discount", "placeName", "active_month", "popularity", "minimumGuest"];
+        const keys = ["name","country", "adult_price", "youth_price", "description", "destination", "image", "category", "tour_type", "duration", "discount", "placeName", "active_month", "popularity", "minimumGuest"];
 
         let updatedData = {};
 
