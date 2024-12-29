@@ -13,7 +13,7 @@ const { enquiryMessage } = require("../utils/enquiryMessage");
 
 //@method :GET 
 //@Endpoint: localhost:6000/get-tours
-//@desc:Getting the array of  of tours in object
+//@desc:Getting the array of tours in object
 module.exports.getTours = async (req, res, next) => {
     try {
         // variable for sorting
@@ -255,7 +255,7 @@ module.exports.updateTour = async (req, res, next) => {
 
 // @method DELETE
 // @desc:controller to delete tour
-// @endpoint:localhost:6000/tour-admin/delete-tour
+// @endpoint:localhost:6000/tour-admin/delete-tour/:id
 module.exports.deleteTour = async (req, res, next) => {
     try {
         // id from url
@@ -313,6 +313,11 @@ module.exports.bookTour = async (req, res, next) => {
     }
 }
 
+
+
+// @method POST
+// @desc:controller to send a enquiry message to owner 
+// @endpoint:localhost:6000/api/ask-question
 module.exports.enquiry = async (req, res, next) => {
     try {
         // name,email,contact,message
