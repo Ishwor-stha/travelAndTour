@@ -147,19 +147,19 @@ module.exports.postTour = async (req, res, next) => {
         // console.log(req.body)
 
         // Handle multiple file uploads (if present)
-        if (req.files) {
-            // Store all image file paths in an array
-            data.image = req.files.map(file => file.path);
-        }
+        // if (req.files) {
+        //     // Store all image file paths in an array
+        //     data.image = req.files.map(file => file.path);
+        // }
 
         // Create a new tour in the database
         const newTour = await Tour.create(data);
         if (!newTour || Object.keys(newTour).length === 0) {
             // Delete uploaded files on failure
-            if (req.files) {
-                const uploadedFilePaths = req.files.map(file => file.path);
-                deleteImage(uploadedFilePaths);
-            }
+            // if (req.files) {
+            //     const uploadedFilePaths = req.files.map(file => file.path);
+            //     deleteImage(uploadedFilePaths);
+            // }
             return next(new errorHandler("Cannot create tour, please try again later", 500));
         }
 
@@ -171,10 +171,10 @@ module.exports.postTour = async (req, res, next) => {
 
     } catch (error) {
         // Delete uploaded files immediately on error
-        if (req.files) {
-            const uploadedFilePaths = req.files.map(file => file.path);
-            deleteImage(uploadedFilePaths);
-        }
+        // if (req.files) {
+        //     const uploadedFilePaths = req.files.map(file => file.path);
+        //     deleteImage(uploadedFilePaths);
+        // }
         if (error.code === 11000 || error.code === "E11000") {
             return next(new errorHandler("Tour name already exists", 400));
         }
@@ -191,7 +191,7 @@ module.exports.updateTour = async (req, res, next) => {
         // id from url
         let id = req.params.id;
         if (!id) return next(new errorHandler("No tour id is given.Please try again.", 400));
-        const keys = ["name", "country", "adult_price", "youth_price", "description", "destination", "image", "district", "category", "tour_type", "duration", "discount", "placeName", "active_month", "popularity", "minimumGuest"];
+        const keys = ["name", "country", "adult_price", "youth_price", "description", "destination", /*"image",*/ "district", "category", "tour_type", "duration", "discount", "placeName", "active_month", "popularity", "minimumGuest"];
 
         let updatedData = {};
 
@@ -207,11 +207,11 @@ module.exports.updateTour = async (req, res, next) => {
 
         }
         let oldPhoto;
-        if (req.files) {
-            updatedData.image = req.files.map(file => file.path); // Update image if new file is uploaded
-            oldPhoto = await Tour.findById(id, "image");
+        // if (req.files) {
+        //     updatedData.image = req.files.map(file => file.path); // Update image if new file is uploaded
+        //     oldPhoto = await Tour.findById(id, "image");
 
-        }
+        // }
 
 
 
@@ -219,24 +219,17 @@ module.exports.updateTour = async (req, res, next) => {
         const updateTour = await Tour.findByIdAndUpdate(id, updatedData, { new: true });
         // console.log(updateTour)
         if (!updateTour || Object.keys(updateTour).length < 0) {
-            if (req.files) {
-                deleteImage(updatedData.image);
-            }
+            // if (req.files) {
+            //     deleteImage(updatedData.image);
+            // }
             return next(new errorHandler("Cannot update tour. Please try again later.", 500));
         }
 
         // Delete old image if a new one was uploaded
-        if (req.files && oldPhoto) {
-            deleteImage(oldPhoto.image);
+        // if (req.files && oldPhoto) {
+        //     deleteImage(oldPhoto.image);
 
-            // const rootPath = path.dirname(require.main.filename);
-
-            // const oldImagePath = path.join(rootPath, oldPhoto.image);
-            // if (fs.existsSync(oldImagePath)) {
-            //     fs.rmSync(oldImagePath);
-            //     console.log(`Deleted old photo: ${oldImagePath}`);
-            // }
-        }
+        // }
 
         // sending response
         res.status(200).json({
@@ -245,10 +238,10 @@ module.exports.updateTour = async (req, res, next) => {
             updatedData
         });
     } catch (error) {
-        if (req.files) {
-            const uploadedFilePaths = req.files.map(file => file.path);
-            deleteImage(uploadedFilePaths);
-        }
+        // if (req.files) {
+        //     const uploadedFilePaths = req.files.map(file => file.path);
+        //     deleteImage(uploadedFilePaths);
+        // }
         next(new errorHandler(error.message || "Something went wrong.Please try again.", 500));
     }
 };

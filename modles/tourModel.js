@@ -31,15 +31,15 @@ const tourSchema = new mongoose.Schema({
         type:"String",
         required:[true,"A tour must have its district name"]
     },
-    image: {
-        type: [String],
-        validate: {
-            validator: function (images) {
-                return images && images.length > 0; // Ensure at least one image is provided
-            },
-            message: `At least one image is required for the tour ${this.image}`
-        }
-    },
+    // image: {
+    //     type: [String],
+    //     validate: {
+    //         validator: function (images) {
+    //             return images && images.length > 0; // Ensure at least one image is provided
+    //         },
+    //         message: `At least one image is required for the tour ${this.image}`
+    //     }
+    // },
     category: {
         type: String,
         required: [true, "Category is missing"]//luxury,holiday,vacation
