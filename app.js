@@ -19,6 +19,7 @@ const corsOptions = {
 }
 // loading environment variables from .env file
 dotenv.config();
+app.set('trust proxy', true);
 
 // Middleware to parse incoming JSON requests
 app.use(express.json());
@@ -26,7 +27,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(express.json({limit: '10kb'}))//limiting the json body size to 10 kb
 //security 
-app.use(limiter);
+//app.use(limiter);
 app.use(helmet());
 app.use(preventHPP);
 app.use(cors(corsOptions));
