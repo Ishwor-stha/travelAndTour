@@ -27,6 +27,10 @@ const tourSchema = new mongoose.Schema({
         type: "String",
         required: [true, "A Tour Must have place name"]
     },
+    district:{
+        type:"String",
+        required:[true,"A tour must have its district name"]
+    },
     image: {
         type: [String],
         validate: {

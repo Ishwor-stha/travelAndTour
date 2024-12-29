@@ -7,8 +7,8 @@ const { validateEmail } = require("../utils/emailValidation");
 const { bookMessage } = require("../utils/bookingMessage");
 const { isValidNepaliPhoneNumber } = require("../utils/validatePhoneNumber");
 const sendMessage = require("../utils/sendMessage");
-const {isValidNumber}=require("../utils/isValidNumber");
-const {enquiryMessage}=require("../utils/enquiryMessage");
+const { isValidNumber } = require("../utils/isValidNumber");
+const { enquiryMessage } = require("../utils/enquiryMessage");
 
 
 //@method :GET 
@@ -21,7 +21,7 @@ module.exports.getTours = async (req, res, next) => {
 
         // let query={}
         let condition = [];
-        let fields = ["placeName", "active_month", "destination", "category", "tour_type", "duration", "name","country",]
+        let fields = ["placeName", "active_month", "destination", "category", "tour_type", "duration", "name", "country", "district"]
 
         // destructuring query parameters
         let { page = 1 } = req.query;
@@ -110,7 +110,7 @@ module.exports.getOneTour = async (req, res, next) => {
         const { slug } = req.params;
         if (!slug) return next(new errorHandler("No slug given of tour.Please try again.", 400));
         const tour = await Tour.findOne({ slug: slug }, "");
-        if (!tour || Object.keys(tour).length < 0) return next(new errorHandler("No tour found.Please try again", 404));
+        if (!tour || Object.keys(tour).length < 0) return next(new errorHandler("No tour found.Please try again.", 404));
         res.status(200).json({
             status: "Success",
             tour
@@ -129,8 +129,8 @@ module.exports.postTour = async (req, res, next) => {
         let data = {};
         const keys = [
             "name", "adult_price", "youth_price", "description", "destination",
-            "category", "tour_type", "duration", "discount", "placeName",
-            "active_month", "popularity", "minimumGuest","country"
+            "category", "tour_type", "duration", "discount", "placeName", "district",
+            "active_month", "popularity", "minimumGuest", "country"
         ];
 
         // Insert data by filtering
@@ -191,7 +191,7 @@ module.exports.updateTour = async (req, res, next) => {
         // id from url
         let id = req.params.id;
         if (!id) return next(new errorHandler("No tour id is given.Please try again.", 400));
-        const keys = ["name","country", "adult_price", "youth_price", "description", "destination", "image", "category", "tour_type", "duration", "discount", "placeName", "active_month", "popularity", "minimumGuest"];
+        const keys = ["name", "country", "adult_price", "youth_price", "description", "destination", "image", "district", "category", "tour_type", "duration", "discount", "placeName", "active_month", "popularity", "minimumGuest"];
 
         let updatedData = {};
 
@@ -202,19 +202,19 @@ module.exports.updateTour = async (req, res, next) => {
             }
         }
 
-        if(req.body.discount){
-            if(!isValidNumber(req.body.discount))throw new Error("Please enter valid discount number");//straight to the catch block
-            
+        if (req.body.discount) {
+            if (!isValidNumber(req.body.discount)) throw new Error("Please enter valid discount number");//straight to the catch block
+
         }
         let oldPhoto;
-        if (req.files) { 
+        if (req.files) {
             updatedData.image = req.files.map(file => file.path); // Update image if new file is uploaded
             oldPhoto = await Tour.findById(id, "image");
 
         }
 
-        
-     
+
+
         // querying to database
         const updateTour = await Tour.findByIdAndUpdate(id, updatedData, { new: true });
         // console.log(updateTour)
@@ -227,8 +227,8 @@ module.exports.updateTour = async (req, res, next) => {
 
         // Delete old image if a new one was uploaded
         if (req.files && oldPhoto) {
-             deleteImage(oldPhoto.image);
-           
+            deleteImage(oldPhoto.image);
+
             // const rootPath = path.dirname(require.main.filename);
 
             // const oldImagePath = path.join(rootPath, oldPhoto.image);
@@ -278,22 +278,28 @@ module.exports.deleteTour = async (req, res, next) => {
     }
 }
 
+
 // @method POST
 // @desc:controller to send a message to owner if customer books the tour
-// @endpoint:localhost:6000/tour-admin/delete-tour
+// @endpoint:localhost:6000/api/book-tour?tourName=*********
 
 module.exports.bookTour = async (req, res, next) => {
     try {
-        // destructring objects form req.body 
-        const { date, phone, email, time, age, nameOfTour } = req.body;
+
+        const {tourName}=req.query
+        if(!tourName)return next(new errorHandler("No name of tour is given on the query.Please try again",400));
+        // destructring objects form req.body
+
+        const { firstName,lastName,date, phone, email, time, age } = req.body;
         // if data is missing
-        if (!date || !phone || !email || !time || !age || !nameOfTour) return next(new errorHandler("All fields are required.Please fill the form again.", 400));
+        if (!firstName || !lastName || !date || !phone || !email || !time || !age || !tourName) return next(new errorHandler("All fields are required.Please fill the form again.", 400));
+        const name=firstName+" "+lastName;
         // email validation falils
         if (!validateEmail(email)) return next(new errorHandler("Email address is not valid.Please try again.", 400));
         //phone number validation fails
         if (!isValidNepaliPhoneNumber(phone)) return next(new errorHandler("Please enter valid phone number.", 400));
         // create message 
-        const message = bookMessage(date, phone, email, time, age, nameOfTour);
+        const message = bookMessage(name,tourName,date, phone, email, time, age);
         // send message to the email
         await sendMessage(next, message, "Tour booking alert", process.env.personal_message_gmail, "Astrapi Travel");
         // send response
@@ -306,22 +312,23 @@ module.exports.bookTour = async (req, res, next) => {
         return next(new errorHandler(error.message, error.statusCode || 500));
     }
 }
-module.exports.enquiry= async(req,res,next)=>{
+
+module.exports.enquiry = async (req, res, next) => {
     try {
         // name,email,contact,message
-        const{firstName,lastName,email,contact,question}=req.body;
-        if(!firstName || ! lastName  || !email || !contact || !question)return next(new errorHandler("Some field is missing.Please fill up all the form.",400));
+        const { firstName, lastName, email, contact, question } = req.body;
+        if (!firstName || !lastName || !email || !contact || !question) return next(new errorHandler("Some field is missing.Please fill up all the form.", 400));
         if (!validateEmail(email)) return next(new errorHandler("Email address is not valid.Please try again.", 400));
         if (!isValidNepaliPhoneNumber(contact)) return next(new errorHandler("Please enter valid phone number.", 400));
-        const name=firstName+lastName;
-        const createMessage=enquiryMessage(name,email,contact,question);
-        await sendMessage(next,createMessage,"Enquiry message",email,name);
+        const name = firstName + lastName;
+        const createMessage = enquiryMessage(name, email, contact, question);
+        await sendMessage(next, createMessage, "Enquiry message", email, name);
         res.status(200).json({
-            status:"success",
-            message:"Your question is sent.Please wait for the reply."
+            status: "success",
+            message: "Your question is sent.Please wait for the reply."
         })
 
     } catch (error) {
-        return next(new errorHandler(error.message ,error.statusCode ||500));
+        return next(new errorHandler(error.message, error.statusCode || 500));
     }
 }
