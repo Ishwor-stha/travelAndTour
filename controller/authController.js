@@ -17,14 +17,10 @@ module.exports.getAllAdmin = async (req, res, next) => {
     try {
         const allAdmin = await admin.find({}, "-_id -password");//exclude _id and password
         // if there is no admin
-        if (!allAdmin) {
-            res.status(404).json({
-                status: "sucess",
-                message: "No data found"
-            });
-        }
+        if (!allAdmin || Object.keys(allAdmin).length<=0)return next(new errorHandling("No tour found.",404)); 
+        
         res.status(200).json({
-            status: "Success",
+            status: "success",
             allAdmin
         });
     } catch (error) {
@@ -69,7 +65,7 @@ module.exports.createAdmin = async (req, res, next) => {
 
         // Respond with success
         res.status(201).json({
-            status: "Success",
+            status: "success",
             message: "Account created successfully."
         });
     } catch (error) {
@@ -140,7 +136,7 @@ module.exports.login = async (req, res, next) => {
             maxAge: 3600 * 1000
         });
         return res.status(200).json({
-            status: "Success",
+            status: "success",
             message: `Hello ${user.name}.`,
         });
     } catch (error) {
@@ -193,7 +189,7 @@ module.exports.logout = (req, res, next) => {
             sameSite: "Strict"
         });
         return res.status(200).json({
-            status: "Success",
+            status: "success",
             message: "You have been logged out."
         });
     } catch (error) {
@@ -253,7 +249,7 @@ module.exports.updateAdmin = async (req, res, next) => {
             return next(new errorHandling("Cannot update data.Please try again.", 500));
         }
         res.status(200).json({
-            status: "Success",
+            status: "success",
             message: "Details changed sucessfully."
         });
     } catch (error) {
@@ -275,7 +271,7 @@ module.exports.removeAdmin = async (req, res, next) => {
             throw new errorHandling("Failed to remove admin.Please try again.", 500);
         }
         res.status(200).json({
-            status: "Success",
+            status: "success",
             message: "Admin removed sucessfully."
         });
     } catch (error) {
@@ -321,7 +317,7 @@ module.exports.forgotPassword = async (req, res, next) => {
         await sendMessage(next, message, "Reset link", findMail.email, findMail.name);
 
         res.status(200).json({
-            status: "Success",
+            status: "success",
             message: "Password reset email is send to mail."
         });
 
@@ -405,7 +401,7 @@ module.exports.resetPassword = async (req, res, next) => {
 
         // Return success response
         res.status(200).json({
-            status: "Success",
+            status: "success",
             message: "Password changed successfully."
         });
 

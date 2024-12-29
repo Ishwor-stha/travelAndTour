@@ -37,7 +37,7 @@ const tourSchema = new mongoose.Schema({
     //         validator: function (images) {
     //             return images && images.length > 0; // Ensure at least one image is provided
     //         },
-    //         message: `At least one image is required for the tour ${this.image}`
+    //         message: `At least one image is required for the tour .`
     //     }
     // },
     category: {
@@ -53,7 +53,7 @@ const tourSchema = new mongoose.Schema({
     active_month: {
         type: [String],
         validate: {
-            validator: function (req, months) {
+            validator: function ( months) {
 
                 const validMonths = [
                     "january", "february", "march", "april", "may", "june",

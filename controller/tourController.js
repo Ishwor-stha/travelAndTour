@@ -85,7 +85,7 @@ module.exports.getTours = async (req, res, next) => {
         if (!tour || Object.keys(tour).length <= 0) return next(new errorHandler("No tour found.", 404));
 
         res.status(200).json({
-            status: "Success",
+            status: "success",
             tourList: tour
         });
 
@@ -112,7 +112,7 @@ module.exports.getOneTour = async (req, res, next) => {
         const tour = await Tour.findOne({ slug: slug }, "");
         if (!tour || Object.keys(tour).length < 0) return next(new errorHandler("No tour found.Please try again.", 404));
         res.status(200).json({
-            status: "Success",
+            status: "success",
             tour
         })
 
@@ -165,7 +165,7 @@ module.exports.postTour = async (req, res, next) => {
 
         // Successfully created the tour
         res.status(201).json({
-            status: "Success",
+            status: "success",
             message: `${newTour.name} created successfully`
         });
 
@@ -233,7 +233,7 @@ module.exports.updateTour = async (req, res, next) => {
 
         // sending response
         res.status(200).json({
-            status: "Success",
+            status: "success",
             name: updateTour.name,
             updatedData
         });
@@ -259,7 +259,7 @@ module.exports.deleteTour = async (req, res, next) => {
         if (!del || Object.keys(del).length <= 0) return next(new errorHandler("No Tour found.Please try again.", 404));
         // sending response
         res.status(200).json({
-            status: "Success",
+            status: "success",
             message: `${del.name} deleted .`
 
         })
@@ -297,7 +297,7 @@ module.exports.bookTour = async (req, res, next) => {
         await sendMessage(next, message, "Tour booking alert", process.env.personal_message_gmail, "Astrapi Travel");
         // send response
         res.status(200).json({
-            status: "Success",
+            status: "success",
             message: "Thank you for your booking! A confirmation email has been sent to Astrapi Travel and Tour"
         });
 
