@@ -80,7 +80,6 @@ module.exports.getTours = async (req, res, next) => {
         page = (page > 0) ? Math.ceil(page) : 1;
         const limit = 10;
         const skip = (page - 1) * limit; // Skip results based on current page
-
         const tour = await tourQuery.skip(skip).limit(limit);
         // if there is is tour 
         if (!tour || Object.keys(tour).length <= 0) return next(new errorHandler("No tour found.", 404));
@@ -310,14 +309,15 @@ module.exports.bookTour = async (req, res, next) => {
 module.exports.enquiry= async(req,res,next)=>{
     try {
         // name,email,contact,message
-        const{name,email,contact,question}=req.body;
-        if(!name || !email || !contact || !question)return next(new errorHandler("Some field is missing.Please fill up all the form.",400));
+        const{firstName,lastName,email,contact,question}=req.body;
+        if(!firstName || ! lastName  || !email || !contact || !question)return next(new errorHandler("Some field is missing.Please fill up all the form.",400));
         if (!validateEmail(email)) return next(new errorHandler("Email address is not valid.Please try again.", 400));
         if (!isValidNepaliPhoneNumber(contact)) return next(new errorHandler("Please enter valid phone number.", 400));
+        const name=firstName+lastName;
         const createMessage=enquiryMessage(name,email,contact,question);
         await sendMessage(next,createMessage,"Enquiry message",email,name);
         res.status(200).json({
-            status:"sucess",
+            status:"success",
             message:"Your question is sent.Please wait for the reply."
         })
 
