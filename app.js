@@ -15,7 +15,8 @@ const cors = require('cors');
 const {preventHPP}=require("./utils/preventHpp");
 
 const corsOptions = {
-    origin: process.env.URL
+    origin: process.env.URL,
+    methods: ["GET", "POST","PATCH","DELETE"]
 }
 // loading environment variables from .env file
 dotenv.config();
