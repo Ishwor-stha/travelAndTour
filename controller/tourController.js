@@ -132,7 +132,7 @@ module.exports.postTour = async (req, res, next) => {
             "category", "tour_type", "duration", "discount", "placeName", "district",
             "active_month", "popularity", "minimumGuest", "country"
         ];
-
+        
         // Insert data by filtering
         for (let key in req.body) {
             if (keys.includes(key)) {
@@ -153,6 +153,7 @@ module.exports.postTour = async (req, res, next) => {
         // }
 
         // Create a new tour in the database
+        
         const newTour = await Tour.create(data);
         if (!newTour || Object.keys(newTour).length === 0) {
             // Delete uploaded files on failure
@@ -279,20 +280,20 @@ module.exports.deleteTour = async (req, res, next) => {
 module.exports.bookTour = async (req, res, next) => {
     try {
 
-        const {tourName}=req.query
-        if(!tourName)return next(new errorHandler("No name of tour is given on the query.Please try again",400));
+        const { tourName } = req.query
+        if (!tourName) return next(new errorHandler("No name of tour is given on the query.Please try again", 400));
         // destructring objects form req.body
 
-        const { firstName,lastName,date, phone, email, time, age } = req.body;
+        const { firstName, lastName, date, phone, email, time, age } = req.body;
         // if data is missing
         if (!firstName || !lastName || !date || !phone || !email || !time || !age || !tourName) return next(new errorHandler("All fields are required.Please fill the form again.", 400));
-        const name=firstName+" "+lastName;
+        const name = firstName + " " + lastName;
         // email validation falils
         if (!validateEmail(email)) return next(new errorHandler("Email address is not valid.Please try again.", 400));
         //phone number validation fails
         if (!isValidNepaliPhoneNumber(phone)) return next(new errorHandler("Please enter valid phone number.", 400));
         // create message 
-        const message = bookMessage(name,tourName,date, phone, email, time, age);
+        const message = bookMessage(name, tourName, date, phone, email, time, age);
         // send message to the email
         await sendMessage(next, message, "Tour booking alert", process.env.personal_message_gmail, "Astrapi Travel");
         // send response

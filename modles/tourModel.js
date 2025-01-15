@@ -59,7 +59,9 @@ const tourSchema = new mongoose.Schema({
                     "january", "february", "march", "april", "may", "june",
                     "july", "august", "september", "october", "november", "december"
                 ];
-                for (const month in months) {
+                
+                for (let month in months) {
+                    month=months[month]
                     if (!validMonths.includes(month.toLowerCase())) {
                         return false;
                     }
