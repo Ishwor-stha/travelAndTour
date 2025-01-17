@@ -90,14 +90,8 @@ module.exports.getTours = async (req, res, next) => {
         });
 
     } catch (error) {
-        // res.status(404).json({
-        //     status: "Failed",
-        //     message: error.message
-        // });
-        // passing erorr to the error handling middleware
+         // passing erorr to the error handling middleware
         next(new errorHandler(error.message, error.statusCode || 500));
-
-
 
     }
 };
