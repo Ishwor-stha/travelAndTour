@@ -12,7 +12,6 @@ const sendMessage = require("../utils/sendMessage");
 // @method GET
 // @desc:controller to get all admin
 // @endpoint: localhost:6000/admin/get-admins
-
 module.exports.getAllAdmin = async (req, res, next) => {
     try {
         const allAdmin = await admin.find({}, "-_id -password");//exclude _id and password
@@ -32,7 +31,6 @@ module.exports.getAllAdmin = async (req, res, next) => {
 // @method POST
 // @desc:controller to create new admin
 // @endpoint: localhost:6000/admin/create-admin
-
 module.exports.createAdmin = async (req, res, next) => {
     try {
         // if there is no password and confirm password
@@ -75,17 +73,13 @@ module.exports.createAdmin = async (req, res, next) => {
 
             return next(new errorHandling(error.message, error.statusCode || 500));
         }
-        // catch duplicate key error
+        // catch duplicate key errore.g., duplicate name or email)
         if (error.code === 11000) {
 
-            // Unique constraint violation (e.g., duplicate name or email)
             return next(new errorHandling("Please try a different name or email.", 409));
 
         }
-
         //(server errors)
-
-
         return next(new errorHandling("Something went wrong on the server.Please try again.", 500));
 
     }
@@ -94,7 +88,6 @@ module.exports.createAdmin = async (req, res, next) => {
 // @method POST
 // @desc:controller to login
 // @endpoint: localhost:6000/admin/login-admin
-
 module.exports.login = async (req, res, next) => {
     try {
         // destrcturing
@@ -149,7 +142,6 @@ module.exports.login = async (req, res, next) => {
 
 // @method POST
 // @desc:controller to check cookies
-
 module.exports.checkJwt = (req, res, next) => {
     try {
         const token = req.cookies.auth_token;
@@ -175,7 +167,6 @@ module.exports.checkJwt = (req, res, next) => {
 // @method DELETE
 // @desc:controller delete cookie from the user
 // @endpoint: localhost:6000/admin/logout-admin
-
 module.exports.logout = (req, res, next) => {
     try {
         const token = req.cookies.auth_token;
@@ -280,10 +271,10 @@ module.exports.removeAdmin = async (req, res, next) => {
     }
 
 }
+
 // @endpoint:localhost:6000/admin/forget-password
 // @desc:forget password also send gmail
 // @method:POST
-
 module.exports.forgotPassword = async (req, res, next) => {
     try {
         // destructuring
@@ -325,6 +316,7 @@ module.exports.forgotPassword = async (req, res, next) => {
         return next(new errorHandling(error.message, error.statusCode || 500));
     }
 }
+
 // @desc: reset link with code
 // @method: PATCH
 // @endpoint:localhost:6000/reset-password/:code

@@ -276,7 +276,6 @@ module.exports.deleteTour = async (req, res, next) => {
 // @method POST
 // @desc:controller to send a message to owner if customer books the tour
 // @endpoint:localhost:6000/api/book-tour?tourName=*********
-
 module.exports.bookTour = async (req, res, next) => {
     try {
 
@@ -314,14 +313,21 @@ module.exports.bookTour = async (req, res, next) => {
 // @endpoint:localhost:6000/api/ask-question
 module.exports.enquiry = async (req, res, next) => {
     try {
-        // name,email,contact,message
+        // destructring name,email,contact,message from req.body
         const { firstName, lastName, email, contact, question } = req.body;
+        // if field is missing 
         if (!firstName || !lastName || !email || !contact || !question) return next(new errorHandler("Some field is missing.Please fill up all the form.", 400));
+        // check email if it is valid or not
         if (!validateEmail(email)) return next(new errorHandler("Email address is not valid.Please try again.", 400));
+        // check phone number if it is valid or not
         if (!isValidNepaliPhoneNumber(contact)) return next(new errorHandler("Please enter valid phone number.", 400));
+        // concat the first name and last name
         const name = firstName + lastName;
+        // create message template form enquiryMessage Function
         const createMessage = enquiryMessage(name, email, contact, question);
+        // Send message
         await sendMessage(next, createMessage, "Enquiry message", email, name);
+        // send sucess response
         res.status(200).json({
             status: "success",
             message: "Your question is sent.Please wait for the reply."
