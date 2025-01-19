@@ -124,7 +124,7 @@ module.exports.postTour = async (req, res, next) => {
         const keys = [
             "name", "adult_price", "youth_price", "description", "destination",
             "category", "tour_type", "duration", "discount", "placeName", "district",
-            "active_month", "popularity", "minimumGuest", "country"
+            "active_month", "popularity", "minimumGuest", "country","drop_destination","pickup_destination"
         ];
         
         // Insert data by filtering
@@ -186,7 +186,7 @@ module.exports.updateTour = async (req, res, next) => {
         // id from url
         let id = req.params.id;
         if (!id) return next(new errorHandler("No tour id is given.Please try again.", 400));
-        const keys = ["name", "country", "adult_price", "youth_price", "description", "destination", /*"image",*/ "district", "category", "tour_type", "duration", "discount", "placeName", "active_month", "popularity", "minimumGuest"];
+        const keys = ["name","drop_destination","pickup_destination", "country", "adult_price", "youth_price", "description", "destination", /*"image",*/ "district", "category", "tour_type", "duration", "discount", "placeName", "active_month", "popularity", "minimumGuest"];
 
         let updatedData = {};
 

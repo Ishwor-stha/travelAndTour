@@ -45,6 +45,18 @@ const tourSchema = new mongoose.Schema({
         required: [true, "Category is missing"]//luxury,holiday,vacation
 
     },
+    pickup_destination:{
+        type:String,
+        required:[true,"A tour must have pickup point"]
+
+
+    },
+    drop_destination:{
+        type:String,
+        required:[true,"A tour must have droping point"]
+
+
+    },
     tour_type: {
         type: String,
         required: [true, "Tour is missing tour type (Domestic,International)"],
