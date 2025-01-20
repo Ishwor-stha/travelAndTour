@@ -66,13 +66,15 @@ const tourSchema = new mongoose.Schema({
         type: [String],
         validate: {
             validator: function ( months) {
-
+                months=months[0].split(",")
+               
                 const validMonths = [
                     "january", "february", "march", "april", "may", "june",
                     "july", "august", "september", "october", "november", "december"
                 ];
                 
                 for (let month in months) {
+                    
                     month=months[month]
                     if (!validMonths.includes(month.toLowerCase())) {
                         return false;
