@@ -6,7 +6,7 @@ This API allows users to manage tours, including adding, updating, and deleting 
 ## Installation
 1. Clone the repository:
    ```bash
-   https://github.com/Ishwor-stha/travelAndTour.git
+   git clone https://github.com/Ishwor-stha/travelAndTour.git
    ```
 2. Install dependencies:
    ```bash
