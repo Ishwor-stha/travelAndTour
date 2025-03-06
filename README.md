@@ -199,20 +199,6 @@ This will retrieve the tours on page 1, sorted by `adult_price` in ascending ord
 | **Admin** | Manage users and tours, create/update/remove admins, reset passwords, access all routes |
 | **User** | Book tours, update personal details, view available tours |
 
-### Features
-- **Role-Based Authentication**: Admins and users have different levels of access.
-- **Password Management**: Users and admins can reset passwords via email verification.
-- **CRUD Operations**: Admins can manage users and tours.
-- **Secure Routes**: Authentication middleware ensures only authorized users can perform actions.
-
-### Technologies Used
-- **Node.js** & **Express.js** for backend development
-- **MongoDB** with Mongoose for database operations
-- **JWT (jsonwebtoken)** for authentication
-- **Bcrypt.js** for password hashing
-- **dotenv** for environment variables
-- **crypto** for secure token generation
-
 ## How to Use
 ### 1. Authentication
 - **Login** with a valid email and password.
@@ -237,5 +223,54 @@ This will retrieve the tours on page 1, sorted by `adult_price` in ascending ord
 ## Security Considerations
 - Passwords are securely hashed using bcrypt.
 - Secure routes with middleware authentication.
+
+
+---
+
+### Security
+
+This application includes several security features:
+
+1. **Rate Limiting**: The app is protected against brute-force attacks using rate limiting middleware. This limits the number of requests a user can make in a given time frame.
+
+2. **Helmet**: Helmet.js is used to set various HTTP headers to secure the app against common vulnerabilities.
+
+3. **CORS**: Cross-Origin Resource Sharing (CORS) is configured to restrict requests only to specific origins. The allowed origins are defined in the environment variables.
+
+4. **Prevent HTTP Parameter Pollution (HPP)**: A custom middleware is implemented to protect against HTTP parameter pollution.
+
+---
+
+### Error Handling
+
+The app uses a custom error handling middleware to catch and respond to errors. The `errorController` handles different error scenarios, such as invalid routes or server errors, and sends appropriate responses.
+
+---
+
+### Environment Variables
+
+To run the application properly, you will need the following environment variables:
+
+- **MONGO_URI**: The URI of the MongoDB database.
+- **PORT**: The port number for the app to run (default: 6000).
+- **URL**: The base URL of the app (used in CORS configuration).
+- **personal_message_gmail**: Email address for sending booking and enquiry messages.
+- **SECRET_KEY**: Secret key used for JWT authentication.
+
+---
+
+### Features
+- **Role-Based Authentication**: Admins and users have different levels of access.
+- **Password Management**: Users and admins can reset passwords via email verification.
+- **CRUD Operations**: Admins can manage users and tours.
+- **Secure Routes**: Authentication middleware ensures only authorized users can perform actions.
+
+### Technologies Used
+- **Node.js** & **Express.js** for backend development
+- **MongoDB** with Mongoose for database operations
+- **JWT (jsonwebtoken)** for authentication
+- **Bcrypt.js** for password hashing
+- **dotenv** for environment variables
+- **crypto** for secure token generation
 
 
