@@ -1,8 +1,8 @@
 const Tour = require("../modles/tourModel");
-const { deleteImage } = require("../utils/deleteImage");
+// const { deleteImage } = require("../utils/deleteImage");
 const errorHandler = require("../utils/errorHandling");
-const fs = require("fs");
-const path = require("path");
+// const fs = require("fs");
+// const path = require("path");
 const { validateEmail } = require("../utils/emailValidation");
 const { bookMessage } = require("../utils/bookingMessage");
 const { isValidNepaliPhoneNumber } = require("../utils/validatePhoneNumber");
