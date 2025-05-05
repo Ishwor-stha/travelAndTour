@@ -25,13 +25,13 @@ A **Node.js-based Tour Management System** built with **Express.js**, **MongoDB*
 
 ---
 
-## 🔍 Overview
+## Overview
 
 This system allows **admins to manage tours**, including creating, updating, and deleting tour listings. Users can **browse tours**, **book them**, or **send inquiries**. Admins must be authenticated using **JWT tokens stored in cookies** for secure access.
 
 ---
 
-## ✅ Features
+## Features
 
 - **Admin Authentication**: Login, logout, JWT token validation.
 - **Admin Management**: Create, update, delete, and view admin users.
@@ -43,7 +43,7 @@ This system allows **admins to manage tours**, including creating, updating, and
 
 ---
 
-## ⚙️ Technologies Used
+## Technologies Used
 
 | Technology        | Description                          |
 |-------------------|--------------------------------------|
@@ -58,13 +58,13 @@ This system allows **admins to manage tours**, including creating, updating, and
 
 ---
 
-## 🛠️ Installation
+## Installation
 
 ### 1. Clone the repository:
 
 ```bash
-git clone https://github.com/your-repo/tour-management-system.git
-cd tour-management-system
+git clone https://github.com/Ishwor-stha/travelAndTour.git
+cd travelAndTour
 ```
 
 ### 2. Install dependencies:
@@ -97,9 +97,9 @@ The server will run on `http://localhost:6000`.
 
 ---
 
-## 🌐 API Endpoints
+## API Endpoints
 
-### 🔐 Admin Routes
+### Admin Routes
 
 | Method | Endpoint                 | Description                         |
 |--------|--------------------------|-------------------------------------|
@@ -114,7 +114,7 @@ The server will run on `http://localhost:6000`.
 
 ---
 
-### 🗺️ Tour Routes
+### Tour Routes
 
 | Method | Endpoint                    | Description                              |
 |--------|-----------------------------|------------------------------------------|
@@ -126,7 +126,7 @@ The server will run on `http://localhost:6000`.
 
 ---
 
-### 📝 Booking & Enquiry Routes
+### Booking & Enquiry Routes
 
 | Method | Endpoint         | Description                       |
 |--------|------------------|-----------------------------------|
@@ -135,7 +135,7 @@ The server will run on `http://localhost:6000`.
 
 ---
 
-## 🔐 Authentication Flow
+## Authentication Flow
 
 - Admins must log in via `/admin/login-admin` to get a JWT token.
 - The token is stored in an HTTP-only cookie (`auth_token`).
@@ -154,9 +154,9 @@ The server will run on `http://localhost:6000`.
 
 ---
 
-## 🗃️ Database Schema (Mongoose Models)
+## Database Schema (Mongoose Models)
 
-### 🧑‍💼 Admin Model
+### Admin Model
 
 ```js
 {
@@ -168,7 +168,7 @@ The server will run on `http://localhost:6000`.
 }
 ```
 
-### 🗼 Tour Model
+### Tour Model
 
 ```js
 {
@@ -209,7 +209,7 @@ POST /admin/create-admin
 }
 ```
 
-### 🔐 Login Admin
+### Login Admin
 
 ```json
 POST /admin/login-admin
@@ -219,7 +219,7 @@ POST /admin/login-admin
 }
 ```
 
-### 📞 Book Tour
+### Book Tour
 
 ```json
 GET /book-tour?tourName=Everest+Trek
@@ -237,7 +237,7 @@ POST Body:
 
 ---
 
-## 🛡️ Error Handling
+## Error Handling
 
 All errors are passed through `next()` and handled by a centralized error middleware. Errors return structured JSON like:
 
